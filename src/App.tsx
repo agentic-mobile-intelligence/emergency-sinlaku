@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
 import EmergencyBanner from "@/components/EmergencyBanner"
+import StickyHeader from "@/components/StickyHeader"
 import IslandPage from "@/pages/IslandPage"
 import RequestAidPage from "@/pages/RequestAidPage"
 import ProviderRegisterPage from "@/pages/ProviderRegisterPage"
@@ -17,7 +18,7 @@ const toasterProps = {
 
 function LandingPage() {
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
+    <div className="min-h-[calc(100vh-88px)] bg-white flex flex-col items-center justify-center p-6">
       <h1 className="text-3xl font-bold text-[#1E3A5F] mb-2 text-center">
         Mariana Islands Emergency Relief Directory
       </h1>
@@ -35,11 +36,6 @@ function LandingPage() {
         <p><a href="tel:911" className="text-[#DC2626] font-bold">911</a> Emergency &nbsp;|&nbsp; <a href="tel:311" className="text-[#1E3A5F] font-bold">311</a> Non-Emergency</p>
         <p>FEMA: <a href="tel:18006213362" className="text-[#1E3A5F] font-bold">1-800-621-3362</a></p>
       </div>
-      <div className="mt-6 flex flex-wrap gap-3 justify-center">
-        <Link to="/request-aid" className="bg-[#DC2626] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition">Sign up as Recipient</Link>
-        <Link to="/provider/register" className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">Sign up as Provider</Link>
-        <Link to="/login" className="text-[#1E3A5F] px-4 py-2 rounded-lg text-sm hover:underline transition">Have an account? Log in</Link>
-      </div>
     </div>
   )
 }
@@ -47,8 +43,9 @@ function LandingPage() {
 function App() {
   return (
     <>
-      <EmergencyBanner />
       <BrowserRouter>
+        <EmergencyBanner />
+        <StickyHeader />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/guam" element={<IslandPage />} />
