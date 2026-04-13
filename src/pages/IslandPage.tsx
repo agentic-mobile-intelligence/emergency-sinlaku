@@ -3,7 +3,7 @@ import { useParams, useNavigate, Navigate } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import { ArrowLeft, Filter, MapPin, Clock, Phone, ChevronDown, Home } from "lucide-react"
+import { Filter, MapPin, Clock, Phone, ChevronDown, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -84,7 +84,7 @@ export default function IslandPage() {
     supabase
       .from("offerings")
       .select("*, organizations(name, contact_phone, verified)")
-      .eq("island", island!)
+      .eq("island", island as any)
       .then(({ data, error }) => {
         if (!error && data) setOfferings(data as Offering[])
         setLoading(false)
