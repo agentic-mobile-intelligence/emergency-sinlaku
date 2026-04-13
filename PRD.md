@@ -807,6 +807,62 @@ For users who can't load the website:
 
 ---
 
+## 26. Dev Sandbox Mode — Idempotent Provider Onboarding
+
+### What It Is
+
+A development pattern that lets engineers walk through the full provider sign-up flow repeatedly without accumulating stale data or hitting unique-constraint errors. In dev, every operation is replayable. In production, sign-up is one-way and permanent.
+
+This is the same pattern Stripe calls **Test Mode** and Twilio calls a **Sandbox**.
+
+### Environment Behavior
+
+| Behavior | Dev (sandbox) | Production |
+|----------|--------------|------------|
+| Forms | Pre-filled with fixture data | Empty |
+| DB write on sign-up | `UPSERT` (idempotent — safe to repeat) | `INSERT` (fails if already exists) |
+| Auth user creation | Deterministic test account (same email each run) | Real email, one-time |
+| Email confirmation | Skipped / auto-confirmed | Required |
+| Org created | Upserted by fixed UUID | New UUID each time |
+| Re-running flow | Returns to clean state | Permanent record |
+
+### Dev Fixture Data (Provider Sign-up Flow)
+
+Pre-fill used in dev mode for the "walk-through" demo:
+
+```
+Organization name:  Guam Red Cross — Sandbox Test Org
+Contact phone:      671-472-7234
+Contact email:      sandbox-test@sinlaku.directory.gu
+Service types:      shelter, food
+Islands:            Guam
+Description:        [Sandbox] Red Cross emergency shelter and feeding operations for Typhoon Sinlaku.
+```
+
+First offering pre-fill:
+```
+Name:           Emergency Shelter — Tiyan High School [SANDBOX]
+Location:       Tiyan High School, Barrigada, Guam
+Service type:   shelter
+Status:         active
+Hours:          24/7
+Capacity:       300 persons
+```
+
+### Implementation Notes
+
+- Gate on `import.meta.env.DEV` (Vite) — never ships to production bundle
+- DB writes use `onConflict: 'id'` (upsert) with a fixed dev UUID (`00000000-0000-0000-0001-000000000001`)
+- Same fixed UUID used by Playwright `global-setup.ts` — dev walk-through and test suite share seed identity
+- Production path: normal Supabase `insert()` — unique constraint error if re-submitted (intentional)
+- Teardown: Playwright `global-teardown.ts` removes the fixed-UUID records after test runs
+
+### User Story
+
+> As an engineer demoing the provider onboarding flow, I can click through sign-up with pre-filled data, see the org and offering appear in the directory, then repeat the walk-through as many times as needed — the second run overwrites the first, the directory stays clean, and no duplicate records accumulate.
+
+---
+
 ## 16. Answered Questions
 
 - [x] **Timeline:** ASAP — minimum features, working functionality, UI tests for MVP
@@ -817,7 +873,8 @@ For users who can't load the website:
 - [x] **Provider sign-up:** Must share organization name. Default unverified. Can apply for verification (public badge).
 - [x] **Calendar:** One unified calendar for April only (no island split)
 - [x] **iCal/Google Calendar:** Not right now
-- [x] **Pre-seeding:** No — let FEMA, Red Cross, GovGuam self-register
+- [x] **Pre-seeding:** No — let FEMA, Red Cross, GovGuam self-register (production). Dev has sandbox mode with idempotent fixture data (see §26).
+- [x] **Dev sandbox mode:** Forms pre-filled in `import.meta.env.DEV`, DB writes use upsert with fixed UUIDs. Production uses normal insert (one-time, permanent).
 - [x] **Situation updates:** Yes — per island, Jay will attach a data source for this
 - [x] **Multi-language:** Toggle to switch language. Warn that translations may be inaccurate. Only English is authoritative.
 - [x] **Reusability:** The TEMPLATE is reusable for future emergencies. This DEPLOYMENT is Sinlaku-specific.
