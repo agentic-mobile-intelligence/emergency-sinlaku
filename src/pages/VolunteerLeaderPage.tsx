@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { useNavigate, useSearchParams, Link } from "react-router-dom"
+import { useState } from "react"
+import { useNavigate, Link } from "react-router-dom"
 import { toast } from "sonner"
 import { ArrowLeft, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,12 +21,12 @@ const SKILLS: { value: string; label: string }[] = [
   { value: "cleanup", label: "Cleanup / Debris removal" },
   { value: "food_distribution", label: "Food distribution" },
   { value: "shelter_management", label: "Shelter management" },
-  { value: "transportation", label: "Transportation (have a vehicle)" },
+  { value: "transportation", label: "Transportation coordination" },
   { value: "medical_support", label: "Medical support (licensed)" },
   { value: "emotional_support", label: "Emotional / mental health support" },
   { value: "childcare", label: "Childcare" },
   { value: "translation", label: "Translation (Chamorro, Chuukese, Carolinian, Tagalog…)" },
-  { value: "general_labor", label: "General labor" },
+  { value: "general_labor", label: "General labor / operations" },
   { value: "other", label: "Other" },
 ]
 
@@ -46,6 +46,8 @@ interface FormState {
   island: string
   skills: string[]
   availability: string[]
+  experience: string
+  team_capacity: string
   notes: string
   is_public: boolean
   privacy_acknowledged: boolean
@@ -57,6 +59,8 @@ const defaultForm: FormState = {
   island: "",
   skills: [],
   availability: [],
+  experience: "",
+  team_capacity: "",
   notes: "",
   is_public: false,
   privacy_acknowledged: false,
@@ -66,28 +70,13 @@ function toggleItem(arr: string[], item: string): string[] {
   return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item]
 }
 
-export default function VolunteerPage() {
+export default function VolunteerLeaderPage() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const sheetId = searchParams.get("sheet")
 
-  const [sheetTitle, setSheetTitle] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(defaultForm)
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-
-  useEffect(() => {
-    if (!sheetId) return
-    supabase
-      .from("volunteer_sheets")
-      .select("title")
-      .eq("id", sheetId)
-      .single()
-      .then(({ data }) => {
-        if (data) setSheetTitle(data.title)
-      })
-  }, [sheetId])
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -96,9 +85,13 @@ export default function VolunteerPage() {
 
   function validate(): boolean {
     const e: Partial<Record<keyof FormState, string>> = {}
-    if (form.skills.length === 0) e.skills = "Select at least one skill."
+    if (form.skills.length === 0) e.skills = "Select at least one area you can lead."
     if (!form.island) e.island = "Please select your island."
     if (!form.privacy_acknowledged) e.privacy_acknowledged = "Please acknowledge the privacy notice."
+    const cap = form.team_capacity.trim()
+    if (cap && (isNaN(Number(cap)) || Number(cap) < 1)) {
+      e.team_capacity = "Enter a whole number (e.g. 10)."
+    }
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -108,13 +101,14 @@ export default function VolunteerPage() {
     if (!validate()) return
     setSubmitting(true)
     try {
-      const { error } = await supabase.from("volunteer_signups").insert({
-        sheet_id: sheetId ?? null,
+      const { error } = await supabase.from("volunteer_leader_signups").insert({
         display_name: form.display_name.trim() || null,
         contact: form.contact.trim() || null,
         island: form.island as "guam" | "saipan" | "tinian" | "rota",
         skills: form.skills,
         availability: form.availability,
+        experience: form.experience.trim() || null,
+        team_capacity: form.team_capacity.trim() ? Number(form.team_capacity) : null,
         notes: form.notes.trim() || null,
         is_public: form.is_public,
         privacy_acknowledged: form.privacy_acknowledged,
@@ -133,11 +127,11 @@ export default function VolunteerPage() {
     return (
       <div className="min-h-[calc(100vh-88px)] bg-white flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center space-y-6 py-8">
-          <div className="text-5xl">🙏</div>
-          <h2 className="text-2xl font-bold text-[#1E3A5F]">Thank You!</h2>
+          <div className="text-5xl">🙌</div>
+          <h2 className="text-2xl font-bold text-[#1E3A5F]">Thank You, Leader!</h2>
           <p className="text-gray-600">
-            Your volunteer sign-up has been received. If you provided contact info, a coordinator
-            may reach out to arrange your involvement.
+            Your sign-up has been received. A coordinator may reach out to discuss how you
+            can best lead and support relief teams.
           </p>
           <div className="space-y-3">
             <Button className="w-full h-12 bg-[#1E3A5F]" onClick={() => navigate("/volunteer/sheets")}>
@@ -166,26 +160,21 @@ export default function VolunteerPage() {
 
         {/* Header */}
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-[#1E3A5F]">Volunteer Sign-Up</h1>
-          {sheetTitle ? (
-            <p className="text-sm text-gray-600">
-              Signing up for: <span className="font-medium">{sheetTitle}</span>
-            </p>
-          ) : (
-            <p className="text-sm text-gray-500">
-              General volunteer sign-up — we'll match you to an opportunity.
-            </p>
-          )}
+          <h1 className="text-2xl font-bold text-[#1E3A5F]">Volunteer Leader Sign-Up</h1>
+          <p className="text-sm text-gray-500">
+            Sign up to coordinate or lead a volunteer team during Supertyphoon Sinlaku relief.
+            No account required.
+          </p>
         </div>
 
-        {/* Cross-link to leader sign-up */}
+        {/* Cross-link to regular volunteer */}
         <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 flex items-center justify-between gap-3">
-          <p className="text-sm text-gray-600">Want to lead or coordinate a team?</p>
+          <p className="text-sm text-gray-600">Just want to volunteer (not lead)?</p>
           <Link
-            to="/volunteer-leader"
+            to="/volunteer"
             className="text-sm font-semibold text-[#1E3A5F] hover:underline whitespace-nowrap"
           >
-            Leader Sign-Up →
+            Volunteer Sign-Up →
           </Link>
         </div>
 
@@ -195,9 +184,9 @@ export default function VolunteerPage() {
 
               {/* Privacy Notice */}
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-                <strong>Privacy Notice:</strong> Your contact details may be shared with the
-                appropriate volunteer organization to coordinate your involvement. You can choose
-                to keep your name and details anonymous — only your skills will be shown publicly.
+                <strong>Privacy Notice:</strong> Your contact details may be shared with relief
+                organizations to coordinate your leadership role. You can choose to keep your
+                name and details anonymous — only your skills and availability will be shown publicly.
               </div>
 
               {/* Island */}
@@ -219,10 +208,10 @@ export default function VolunteerPage() {
                 {errors.island && <p className="text-sm text-destructive">{errors.island}</p>}
               </fieldset>
 
-              {/* Skills */}
+              {/* Skills — framed as "what can you lead" */}
               <fieldset className="space-y-3">
                 <legend className="text-base font-semibold">
-                  How Can You Help? <span className="text-destructive">*</span>
+                  What Can You Lead? <span className="text-destructive">*</span>
                 </legend>
                 <div className="space-y-2">
                   {SKILLS.map(({ value, label }) => (
@@ -263,6 +252,45 @@ export default function VolunteerPage() {
                     </label>
                   ))}
                 </div>
+              </fieldset>
+
+              {/* Leadership Experience */}
+              <fieldset className="space-y-2">
+                <Label htmlFor="experience" className="text-base font-semibold">
+                  Leadership Experience{" "}
+                  <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Briefly describe relevant coordination or emergency response experience.
+                </p>
+                <Textarea
+                  id="experience"
+                  className="text-base min-h-[80px]"
+                  value={form.experience}
+                  onChange={(e) => set("experience", e.target.value)}
+                  placeholder="e.g. Led Red Cross shelter team during previous typhoon response, 5 years community organizing…"
+                />
+              </fieldset>
+
+              {/* Team Capacity */}
+              <fieldset className="space-y-2">
+                <Label htmlFor="team_capacity" className="text-base font-semibold">
+                  Team Size You Can Manage{" "}
+                  <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Roughly how many volunteers could you coordinate at once?
+                </p>
+                <Input
+                  id="team_capacity"
+                  type="number"
+                  min={1}
+                  className="h-12 text-base w-40"
+                  value={form.team_capacity}
+                  onChange={(e) => set("team_capacity", e.target.value)}
+                  placeholder="e.g. 10"
+                />
+                {errors.team_capacity && <p className="text-sm text-destructive">{errors.team_capacity}</p>}
               </fieldset>
 
               {/* Public / Anonymous */}
@@ -347,7 +375,7 @@ export default function VolunteerPage() {
                   className="text-base min-h-[80px]"
                   value={form.notes}
                   onChange={(e) => set("notes", e.target.value)}
-                  placeholder="Languages you speak, special skills, limitations, vehicle size, etc."
+                  placeholder="Languages you speak, specific areas of Guam/CNMI you can cover, other context…"
                 />
               </fieldset>
 
@@ -360,7 +388,7 @@ export default function VolunteerPage() {
                     className="h-5 w-5 mt-0.5 flex-shrink-0"
                   />
                   <p className="text-sm">
-                    I understand that my contact details may be shared with a volunteer organization to coordinate my involvement, and that I can choose to remain anonymous. <span className="text-destructive">*</span>
+                    I understand that my contact details may be shared with a volunteer organization to coordinate my leadership role, and that I can choose to remain anonymous. <span className="text-destructive">*</span>
                   </p>
                 </label>
                 {errors.privacy_acknowledged && (
@@ -374,13 +402,12 @@ export default function VolunteerPage() {
                 className="w-full h-14 text-base bg-[#1E3A5F]"
                 disabled={submitting}
               >
-                {submitting ? "Submitting…" : "Submit Volunteer Sign-Up"}
+                {submitting ? "Submitting…" : "Submit Leader Sign-Up"}
               </Button>
 
               <p className="text-xs text-center text-muted-foreground pb-2">
-                No account required. You can{" "}
-                <Link to="/volunteer/sheets" className="underline">browse all volunteer sheets</Link>{" "}
-                to find a specific opportunity.
+                No account required. Looking to volunteer instead?{" "}
+                <Link to="/volunteer" className="underline">Volunteer sign-up →</Link>
               </p>
             </form>
           </CardContent>

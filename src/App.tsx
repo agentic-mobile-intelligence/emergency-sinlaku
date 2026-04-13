@@ -14,6 +14,7 @@ import LoginPage from "@/pages/LoginPage"
 import ContributePage from "@/pages/ContributePage"
 import VolunteerPage from "@/pages/VolunteerPage"
 import VolunteerSheetsPage from "@/pages/VolunteerSheetsPage"
+import VolunteerLeaderPage from "@/pages/VolunteerLeaderPage"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -110,6 +111,7 @@ function App() {
           <Route path="/contribute" element={<ContributePage />} />
           <Route path="/volunteer" element={<VolunteerPage />} />
           <Route path="/volunteer/sheets" element={<VolunteerSheetsPage />} />
+          <Route path="/volunteer-leader" element={<VolunteerLeaderPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />

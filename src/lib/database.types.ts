@@ -294,6 +294,51 @@ export type Database = {
         }
         Relationships: []
       }
+      volunteer_leader_signups: {
+        Row: {
+          id: string
+          display_name: string | null
+          contact: string | null
+          island: Database["public"]["Enums"]["island"] | null
+          skills: Database["public"]["Enums"]["volunteer_skill"][]
+          availability: Database["public"]["Enums"]["volunteer_availability"][]
+          experience: string | null
+          team_capacity: number | null
+          notes: string | null
+          is_public: boolean
+          privacy_acknowledged: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          display_name?: string | null
+          contact?: string | null
+          island?: Database["public"]["Enums"]["island"] | null
+          skills?: Database["public"]["Enums"]["volunteer_skill"][]
+          availability?: Database["public"]["Enums"]["volunteer_availability"][]
+          experience?: string | null
+          team_capacity?: number | null
+          notes?: string | null
+          is_public?: boolean
+          privacy_acknowledged: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          display_name?: string | null
+          contact?: string | null
+          island?: Database["public"]["Enums"]["island"] | null
+          skills?: Database["public"]["Enums"]["volunteer_skill"][]
+          availability?: Database["public"]["Enums"]["volunteer_availability"][]
+          experience?: string | null
+          team_capacity?: number | null
+          notes?: string | null
+          is_public?: boolean
+          privacy_acknowledged?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       volunteer_signups: {
         Row: {
           id: string
