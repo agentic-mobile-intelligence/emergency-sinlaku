@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Github, MessageCircle, Code2, Database, Bug, GitPullRequest } from "lucide-react"
+import { ExternalLink, MessageCircle, Code2, Database, Bug, GitPullRequest } from "lucide-react"
 
 const GITHUB_URL = "https://github.com/agentic-mobile-intelligence/emergency-sinlaku"
 
@@ -26,7 +26,7 @@ export default function ContributePage() {
             rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-xl border border-gray-200 px-5 py-4 hover:bg-gray-50 transition group"
           >
-            <Github className="w-5 h-5 text-gray-700 shrink-0" />
+            <ExternalLink className="w-5 h-5 text-gray-700 shrink-0" />
             <div>
               <p className="font-medium text-[#1E3A5F] group-hover:underline">
                 agentic-mobile-intelligence/emergency-sinlaku

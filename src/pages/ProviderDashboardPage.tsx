@@ -120,7 +120,7 @@ export default function ProviderDashboardPage() {
   const [verificationSaving, setVerificationSaving] = useState(false)
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/auth")
+    if (!authLoading && !user) navigate("/login")
   }, [authLoading, user, navigate])
 
   useEffect(() => {

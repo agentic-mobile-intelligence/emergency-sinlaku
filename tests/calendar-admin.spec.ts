@@ -22,8 +22,8 @@ test.describe("T-SH: Share & Community", () => {
     const pages = ["/", "/guam", "/request-aid", "/provider/register", "/calendar"]
     for (const path of pages) {
       await page.goto(path)
-      const banner = page.getByText("EMERGENCY")
-      await expect(banner).toBeVisible()
+      // EmergencyBanner (red bar) always shows "911 Emergency" link — unique accessible name
+      await expect(page.getByRole("link", { name: "911 Emergency" })).toBeVisible()
     }
   })
 })

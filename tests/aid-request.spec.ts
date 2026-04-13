@@ -1,4 +1,9 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, type Page } from "@playwright/test"
+
+/** Click through the EmergencyGate to reveal the AidRequestForm. */
+async function clickThroughGate(page: Page) {
+  await page.getByRole("button", { name: /fill out aid request form/i }).click()
+}
 
 test.describe("T-AR: Aid Request Form", () => {
   test.beforeEach(async ({ page }) => {
@@ -7,19 +12,22 @@ test.describe("T-AR: Aid Request Form", () => {
 
   // T-AR-01: Happy Path
   test("T-AR-01a: emergency contacts shown first", async ({ page }) => {
-    await expect(page.getByText("911")).toBeVisible()
-    await expect(page.getByText(/FEMA/i)).toBeVisible()
+    // EmergencyGate renders an "Emergency Contacts" heading and FEMA link before the form
+    await expect(page.getByRole("heading", { name: /emergency contacts/i })).toBeVisible()
+    await expect(page.getByText(/FEMA/i).first()).toBeVisible()
   })
 
   test("T-AR-01b: form has required fields", async ({ page }) => {
-    // Core fields
+    await clickThroughGate(page)
+    // Name field (Label htmlFor="name" → Input id="name")
     await expect(page.getByLabel(/name/i).first()).toBeVisible()
-    await expect(page.getByLabel(/island/i).first()).toBeVisible()
-    // Needs checklist
-    await expect(page.getByText(/food/i)).toBeVisible()
-    await expect(page.getByText(/shelter/i)).toBeVisible()
-    await expect(page.getByText(/water/i)).toBeVisible()
-    await expect(page.getByText(/medical/i)).toBeVisible()
+    // Island section label (Select has no id, so check label text)
+    await expect(page.getByText(/your island/i)).toBeVisible()
+    // Needs checklist — use exact: true to avoid matching description textarea
+    await expect(page.getByText("Food", { exact: true })).toBeVisible()
+    await expect(page.getByText("Shelter", { exact: true })).toBeVisible()
+    await expect(page.getByText("Water", { exact: true })).toBeVisible()
+    await expect(page.getByText("Medical", { exact: true })).toBeVisible()
   })
 
   // T-AR-03: PII Prevention
@@ -37,27 +45,33 @@ test.describe("T-AR: Aid Request Form", () => {
   })
 
   test("T-AR-03c: privacy notice visible", async ({ page }) => {
+    await clickThroughGate(page)
     await expect(page.getByText(/does not collect/i)).toBeVisible()
   })
 
   // T-AR-04: Safety Questions
   test("T-AR-04a: dogs near home question exists", async ({ page }) => {
+    await clickThroughGate(page)
     await expect(page.getByText(/dog/i)).toBeVisible()
   })
 
   test("T-AR-04b: safely accessible question exists", async ({ page }) => {
+    await clickThroughGate(page)
     await expect(page.getByText(/accessible/i)).toBeVisible()
   })
 
   test("T-AR-04c: cannot leave location flag exists", async ({ page }) => {
+    await clickThroughGate(page)
     await expect(page.getByText(/cannot leave/i)).toBeVisible()
   })
 
   test("T-AR-04d: medical needs options exist", async ({ page }) => {
+    await clickThroughGate(page)
     await expect(page.getByText(/wheelchair|oxygen|dialysis|insulin|mobility/i).first()).toBeVisible()
   })
 
   test("T-AR-04e: household count fields exist", async ({ page }) => {
+    await clickThroughGate(page)
     await expect(page.getByText(/elderly|children|disabled/i).first()).toBeVisible()
   })
 })

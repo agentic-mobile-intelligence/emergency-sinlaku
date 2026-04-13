@@ -456,8 +456,12 @@ export default function ProviderRegisterPage() {
   const [step, setStep] = useState<"auth" | "org" | "done">("auth")
 
   useEffect(() => {
-    if (!authLoading && user) {
-      setStep("org")
+    if (!authLoading) {
+      if (user) {
+        setStep("org")
+      } else {
+        setStep("auth")
+      }
     }
   }, [authLoading, user])
 

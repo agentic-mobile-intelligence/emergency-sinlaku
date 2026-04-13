@@ -61,27 +61,43 @@ const MOCK_ORG = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Extract project ref from VITE_SUPABASE_URL so we can set the exact localStorage key.
+// Key format Supabase v2 uses: "sb-{projectRef}-auth-token"
+const SUPABASE_PROJECT_REF = (process.env.VITE_SUPABASE_URL ?? "")
+  .replace("https://", "")
+  .split(".")[0] // e.g. "uukwajicnqgkuribktdl"
+
 /**
  * Inject a mock Supabase session into localStorage BEFORE the page loads.
  * Must be called before page.goto(). Uses addInitScript to run before
  * app scripts so useAuth's getSession() picks up the mock session.
+ *
+ * Two-pronged approach for cross-browser compatibility:
+ *  1. Directly set localStorage item with the exact Supabase key (works in WebKit/Safari)
+ *  2. Override localStorage.getItem as fallback for any sb-*-auth-token key
  */
 async function injectSession(page: Page, session = MOCK_SESSION) {
-  await page.addInitScript(({ sess }) => {
-    // Override localStorage.getItem: return mock session for any sb-*-auth-token key
-    // Supabase v2 uses key: "sb-{projectRef}-auth-token"
+  await page.addInitScript(({ sess, projectRef }) => {
+    const sessionStr = JSON.stringify(sess)
+
+    // Prong 1: directly write the session value so Supabase's own getItem reads it
+    if (projectRef) {
+      try { localStorage.setItem(`sb-${projectRef}-auth-token`, sessionStr) } catch {}
+    }
+
+    // Prong 2: override getItem for any Supabase auth token key (WebKit may bypass setItem)
     const _orig = localStorage.getItem.bind(localStorage)
     Object.defineProperty(localStorage, "getItem", {
       value: (key: string) => {
         if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
-          return JSON.stringify(sess)
+          return sessionStr
         }
         return _orig(key)
       },
       writable: true,
       configurable: true,
     })
-  }, { sess: session })
+  }, { sess: session, projectRef: SUPABASE_PROJECT_REF })
 }
 
 /**
