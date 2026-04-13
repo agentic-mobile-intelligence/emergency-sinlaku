@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
-import LandingPage from "@/pages/LandingPage"
+import HomePage from "@/pages/HomePage"
 import IslandPage from "@/pages/IslandPage"
-import ProviderRegisterPage from "@/pages/ProviderRegisterPage"
+import ProviderDashboardPage from './pages/ProviderDashboardPage'
 
 const toasterProps = {
   theme: "dark" as const,
@@ -11,18 +11,30 @@ const toasterProps = {
   },
 }
 
+const Placeholder = ({ label }: { label: string }) => (
+  <div className="p-8 text-center text-muted-foreground">{label} — coming soon</div>
+)
+
 function App() {
   return (
     <>
       <BrowserRouter>
         <Routes>
-          {/* Public pages — no auth required to browse */}
-          <Route path="/" element={<LandingPage />} />
+          {/* Landing */}
+          <Route path="/" element={<HomePage />} />
+
+          {/* Island pages — explicit routes + dynamic catch-all */}
+          <Route path="/guam"    element={<IslandPage />} />
+          <Route path="/saipan"  element={<IslandPage />} />
+          <Route path="/tinian"  element={<IslandPage />} />
+          <Route path="/rota"    element={<IslandPage />} />
           <Route path="/:island" element={<IslandPage />} />
-          <Route path="/request-aid" element={<div className="p-8 text-center text-muted-foreground">Aid request form — coming soon</div>} />
-          <Route path="/provider/register" element={<ProviderRegisterPage />} />
-          <Route path="/provider/dashboard" element={<div className="p-8 text-center text-muted-foreground">Provider dashboard — coming soon</div>} />
-          <Route path="/admin" element={<div className="p-8 text-center text-muted-foreground">Admin dashboard — coming soon</div>} />
+
+          {/* Forms + dashboards */}
+          <Route path="/request-aid"        element={<Placeholder label="Aid request form" />} />
+          <Route path="/provider/register"  element={<Placeholder label="Provider registration" />} />
+          <Route path="/provider/dashboard" element={<ProviderDashboardPage />} />
+          <Route path="/admin"              element={<Placeholder label="Admin dashboard" />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />
