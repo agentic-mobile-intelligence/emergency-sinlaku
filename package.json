@@ -11,7 +11,9 @@
     "test": "bunx playwright test",
     "test:ui": "bunx playwright test --ui",
     "test:headed": "bunx playwright test --headed",
-    "test:report": "bunx playwright show-report"
+    "test:report": "bunx playwright show-report",
+    "test:island": "bunx playwright test tests/island-page.spec.ts",
+    "test:island:headed": "bunx playwright test tests/island-page.spec.ts --headed --project='Desktop Chrome'"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -50,7 +52,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-hook-form": "^7.72.1",
-    "react-leaflet": "^5.0.0",
+    "react-leaflet": "4.2.1",
     "react-resizable-panels": "~2.1.7",
     "react-router-dom": "^6.28.0",
     "recharts": "^2.15.0",
@@ -66,6 +68,7 @@
     "@types/react-dom": "18.3.5",
     "@vitejs/plugin-react": "5.1.4",
     "autoprefixer": "10.4.21",
+    "dotenv": "^17.4.2",
     "postcss": "8.5.8",
     "tailwindcss": "3.4.17",
     "typescript": "5.9.3",

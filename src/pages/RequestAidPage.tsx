@@ -636,7 +636,7 @@ export default function RequestAidPage() {
             <Button
               size="sm"
               variant="outline"
-              className="text-xs border-destructive-foreground/30 text-destructive-foreground hover:bg-destructive-foreground/10"
+              className="text-xs border-destructive-foreground/30 text-destructive-foreground hover:bg-destructive-foreground hover:text-background"
               onClick={() => navigate("/")}
             >
               Home

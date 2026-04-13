@@ -2,15 +2,15 @@ application:
   name: emergency-sinlaku
   url: sinlaku.directory.gu
   registryLogin:
-    registry: 158.101.10.97:3000
+    registry: gitea.elizaga.dev
     username: jay-elizaga-dev-gitea
     personalAccessToken: ae1bf47e5bc805289b93a40db523cbfe09b428bb
   pods:
     - name: web
-      image: 158.101.10.97:3000/jay-elizaga-dev-gitea/directory-gu:latest
+      image: gitea.elizaga.dev/jay-elizaga-dev-gitea/directory-gu:latest
       path: /
       servicePorts:
         - 80
       vars:
         VITE_SUPABASE_URL: "https://uukwajicnqgkuribktdl.supabase.co"
-        VITE_SUPABASE_PUBLISHABLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3dhamljbnFna3VyaWJrdGRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTQxNzQsImV4cCI6MjA5MTU5MDE3NH0.5y36fM0NYawX7kij46Kd8weHUdqPq-vhoFmfmZGnb54"
+        VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_dpALjfu5DVs9bBa7TiJEyw_I44bYXrs"

@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -14,76 +16,61 @@ export type Database = {
     Tables: {
       aid_requests: {
         Row: {
-          cannot_relocate: boolean
-          children_count: number | null
           created_at: string
-          disabled_count: number | null
           dogs_nearby: boolean
-          elderly_count: number | null
           email: string | null
           household_size: number
           id: string
           island: Database["public"]["Enums"]["island"]
           landline_phone: string | null
-          medical_needs: Database["public"]["Enums"]["medical_need"][] | null
-          medical_notes: string | null
           mobile_phone: string | null
           name: string
           needs: Database["public"]["Enums"]["service_type"][]
           no_contact_explanation: string | null
           notes: string | null
           responded_by: string | null
-          safely_accessible: Database["public"]["Enums"]["accessibility"]
-          status: Database["public"]["Enums"]["request_status"]
+          safely_accessible: Database["public"]["Enums"]["accessible_status"]
+          status: Database["public"]["Enums"]["aid_request_status"]
           updated_at: string
+          user_id: string | null
         }
         Insert: {
-          cannot_relocate?: boolean
-          children_count?: number | null
           created_at?: string
-          disabled_count?: number | null
           dogs_nearby?: boolean
-          elderly_count?: number | null
           email?: string | null
           household_size?: number
           id?: string
           island: Database["public"]["Enums"]["island"]
           landline_phone?: string | null
-          medical_needs?: Database["public"]["Enums"]["medical_need"][] | null
-          medical_notes?: string | null
           mobile_phone?: string | null
           name: string
           needs?: Database["public"]["Enums"]["service_type"][]
           no_contact_explanation?: string | null
           notes?: string | null
           responded_by?: string | null
-          safely_accessible?: Database["public"]["Enums"]["accessibility"]
-          status?: Database["public"]["Enums"]["request_status"]
+          safely_accessible?: Database["public"]["Enums"]["accessible_status"]
+          status?: Database["public"]["Enums"]["aid_request_status"]
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
-          cannot_relocate?: boolean
-          children_count?: number | null
           created_at?: string
-          disabled_count?: number | null
           dogs_nearby?: boolean
-          elderly_count?: number | null
           email?: string | null
           household_size?: number
           id?: string
           island?: Database["public"]["Enums"]["island"]
           landline_phone?: string | null
-          medical_needs?: Database["public"]["Enums"]["medical_need"][] | null
-          medical_notes?: string | null
           mobile_phone?: string | null
           name?: string
           needs?: Database["public"]["Enums"]["service_type"][]
           no_contact_explanation?: string | null
           notes?: string | null
           responded_by?: string | null
-          safely_accessible?: Database["public"]["Enums"]["accessibility"]
-          status?: Database["public"]["Enums"]["request_status"]
+          safely_accessible?: Database["public"]["Enums"]["accessible_status"]
+          status?: Database["public"]["Enums"]["aid_request_status"]
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -97,11 +84,10 @@ export type Database = {
       }
       offerings: {
         Row: {
-          capacity_max: number | null
           capacity_text: string | null
           created_at: string
           description: string | null
-          hours_text: string
+          hours_text: string | null
           id: string
           island: Database["public"]["Enums"]["island"]
           location_lat: number | null
@@ -116,11 +102,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          capacity_max?: number | null
           capacity_text?: string | null
           created_at?: string
           description?: string | null
-          hours_text: string
+          hours_text?: string | null
           id?: string
           island: Database["public"]["Enums"]["island"]
           location_lat?: number | null
@@ -135,11 +120,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          capacity_max?: number | null
           capacity_text?: string | null
           created_at?: string
           description?: string | null
-          hours_text?: string
+          hours_text?: string | null
           id?: string
           island?: Database["public"]["Enums"]["island"]
           location_lat?: number | null
@@ -166,7 +150,7 @@ export type Database = {
       organizations: {
         Row: {
           contact_email: string | null
-          contact_phone: string
+          contact_phone: string | null
           created_at: string
           description: string | null
           id: string
@@ -174,14 +158,14 @@ export type Database = {
           name: string
           service_types: Database["public"]["Enums"]["service_type"][]
           updated_at: string
-          user_id: string
+          user_id: string | null
           verification_requested: boolean
           verified: boolean
           whatsapp: string | null
         }
         Insert: {
           contact_email?: string | null
-          contact_phone: string
+          contact_phone?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -189,14 +173,14 @@ export type Database = {
           name: string
           service_types?: Database["public"]["Enums"]["service_type"][]
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           verification_requested?: boolean
           verified?: boolean
           whatsapp?: string | null
         }
         Update: {
           contact_email?: string | null
-          contact_phone?: string
+          contact_phone?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -204,7 +188,7 @@ export type Database = {
           name?: string
           service_types?: Database["public"]["Enums"]["service_type"][]
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           verification_requested?: boolean
           verified?: boolean
           whatsapp?: string | null
@@ -217,24 +201,18 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
-          role: string
-          updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           display_name: string
           id: string
-          role?: string
-          updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string
           id?: string
-          role?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -279,17 +257,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      accessibility: "yes" | "no" | "unsure"
+      accessible_status: "yes" | "no" | "unsure"
+      aid_request_status: "open" | "responding" | "fulfilled" | "unable"
       island: "guam" | "saipan" | "tinian" | "rota"
-      medical_need:
-        | "wheelchair"
-        | "oxygen_ventilator"
-        | "dialysis"
-        | "insulin_medication"
-        | "mobility_aid"
-        | "other"
-      offering_status: "active" | "planned" | "at_capacity" | "closed"
-      request_status: "open" | "responding" | "fulfilled" | "unable"
+      offering_status: "active" | "planned" | "closed"
       service_type:
         | "shelter"
         | "food"
@@ -299,6 +270,7 @@ export type Database = {
         | "cleanup"
         | "clothing"
         | "transportation"
+        | "information"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -426,18 +398,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      accessibility: ["yes", "no", "unsure"],
+      accessible_status: ["yes", "no", "unsure"],
+      aid_request_status: ["open", "responding", "fulfilled", "unable"],
       island: ["guam", "saipan", "tinian", "rota"],
-      medical_need: [
-        "wheelchair",
-        "oxygen_ventilator",
-        "dialysis",
-        "insulin_medication",
-        "mobility_aid",
-        "other",
-      ],
-      offering_status: ["active", "planned", "at_capacity", "closed"],
-      request_status: ["open", "responding", "fulfilled", "unable"],
+      offering_status: ["active", "planned", "closed"],
       service_type: [
         "shelter",
         "food",
@@ -447,6 +411,7 @@ export const Constants = {
         "cleanup",
         "clothing",
         "transportation",
+        "information",
       ],
     },
   },

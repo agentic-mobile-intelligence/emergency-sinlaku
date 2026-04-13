@@ -7,6 +7,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
+  globalSetup: "./tests/global-setup.ts",
+  globalTeardown: "./tests/global-teardown.ts",
   use: {
     baseURL: process.env.BASE_URL || "http://localhost:3001",
     trace: "on-first-retry",
@@ -29,7 +31,7 @@ export default defineConfig({
   webServer: {
     command: "bun run dev --port 3001",
     url: "http://localhost:3001",
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
     timeout: 30000,
   },
 })

@@ -38,6 +38,7 @@ const SERVICE_COLORS: Record<string, string> = {
   cleanup: "#0891B2",
   clothing: "#DB2777",
   transportation: "#EA580C",
+  information: "#6366F1",
 }
 
 const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -223,6 +224,7 @@ export default function IslandPage() {
                 <Card
                   key={o.id}
                   ref={(el) => { cardRefs.current[o.id] = el }}
+                  data-testid="service-card"
                   className={`cursor-pointer transition-all ${selectedId === o.id ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
                   onClick={() => selectOffering(o.id)}
                 >
