@@ -1,9 +1,13 @@
 application:
   name: emergency-sinlaku
   url: sinlaku.directory.gu
+  registryLogin:
+    registry: 158.101.10.97:3000
+    username: jay-elizaga-dev-gitea
+    personalAccessToken: ae1bf47e5bc805289b93a40db523cbfe09b428bb
   pods:
     - name: web
-      image: registry.nexlayer.io/nexlayer-mcp/emergency-sinlaku:latest
+      image: 158.101.10.97:3000/jay-elizaga-dev-gitea/directory-gu:latest
       path: /
       servicePorts:
         - 80
