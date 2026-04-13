@@ -249,6 +249,101 @@ export type Database = {
         }
         Relationships: []
       }
+      volunteer_sheets: {
+        Row: {
+          id: string
+          title: string
+          organization_name: string
+          description: string | null
+          island: Database["public"]["Enums"]["island"]
+          skills_needed: Database["public"]["Enums"]["volunteer_skill"][]
+          date_text: string | null
+          capacity: number | null
+          signup_count: number
+          contact_info: string | null
+          status: Database["public"]["Enums"]["offering_status"]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          organization_name: string
+          description?: string | null
+          island: Database["public"]["Enums"]["island"]
+          skills_needed?: Database["public"]["Enums"]["volunteer_skill"][]
+          date_text?: string | null
+          capacity?: number | null
+          signup_count?: number
+          contact_info?: string | null
+          status?: Database["public"]["Enums"]["offering_status"]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          organization_name?: string
+          description?: string | null
+          island?: Database["public"]["Enums"]["island"]
+          skills_needed?: Database["public"]["Enums"]["volunteer_skill"][]
+          date_text?: string | null
+          capacity?: number | null
+          signup_count?: number
+          contact_info?: string | null
+          status?: Database["public"]["Enums"]["offering_status"]
+          created_at?: string
+        }
+        Relationships: []
+      }
+      volunteer_signups: {
+        Row: {
+          id: string
+          sheet_id: string | null
+          display_name: string | null
+          contact: string | null
+          island: Database["public"]["Enums"]["island"] | null
+          skills: Database["public"]["Enums"]["volunteer_skill"][]
+          availability: Database["public"]["Enums"]["volunteer_availability"][]
+          notes: string | null
+          is_public: boolean
+          privacy_acknowledged: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          sheet_id?: string | null
+          display_name?: string | null
+          contact?: string | null
+          island?: Database["public"]["Enums"]["island"] | null
+          skills?: Database["public"]["Enums"]["volunteer_skill"][]
+          availability?: Database["public"]["Enums"]["volunteer_availability"][]
+          notes?: string | null
+          is_public?: boolean
+          privacy_acknowledged: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          sheet_id?: string | null
+          display_name?: string | null
+          contact?: string | null
+          island?: Database["public"]["Enums"]["island"] | null
+          skills?: Database["public"]["Enums"]["volunteer_skill"][]
+          availability?: Database["public"]["Enums"]["volunteer_availability"][]
+          notes?: string | null
+          is_public?: boolean
+          privacy_acknowledged?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_signups_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "volunteer_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -271,6 +366,25 @@ export type Database = {
         | "clothing"
         | "transportation"
         | "information"
+      volunteer_skill:
+        | "cleanup"
+        | "food_distribution"
+        | "shelter_management"
+        | "transportation"
+        | "medical_support"
+        | "emotional_support"
+        | "childcare"
+        | "translation"
+        | "general_labor"
+        | "other"
+      volunteer_availability:
+        | "weekday_mornings"
+        | "weekday_afternoons"
+        | "weekday_evenings"
+        | "weekend_mornings"
+        | "weekend_afternoons"
+        | "weekend_evenings"
+        | "anytime"
     }
     CompositeTypes: {
       [_ in never]: never

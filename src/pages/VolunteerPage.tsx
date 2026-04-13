@@ -1,0 +1,384 @@
+import { useEffect, useState } from "react"
+import { useNavigate, useSearchParams, Link } from "react-router-dom"
+import { toast } from "sonner"
+import { ArrowLeft, Heart } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Card, CardContent } from "@/components/ui/card"
+import { supabase } from "@/lib/supabase"
+
+const SKILLS: { value: string; label: string }[] = [
+  { value: "cleanup", label: "Cleanup / Debris removal" },
+  { value: "food_distribution", label: "Food distribution" },
+  { value: "shelter_management", label: "Shelter management" },
+  { value: "transportation", label: "Transportation (have a vehicle)" },
+  { value: "medical_support", label: "Medical support (licensed)" },
+  { value: "emotional_support", label: "Emotional / mental health support" },
+  { value: "childcare", label: "Childcare" },
+  { value: "translation", label: "Translation (Chamorro, Chuukese, Carolinian, Tagalog…)" },
+  { value: "general_labor", label: "General labor" },
+  { value: "other", label: "Other" },
+]
+
+const AVAILABILITY: { value: string; label: string }[] = [
+  { value: "weekday_mornings", label: "Weekday mornings" },
+  { value: "weekday_afternoons", label: "Weekday afternoons" },
+  { value: "weekday_evenings", label: "Weekday evenings" },
+  { value: "weekend_mornings", label: "Weekend mornings" },
+  { value: "weekend_afternoons", label: "Weekend afternoons" },
+  { value: "weekend_evenings", label: "Weekend evenings" },
+  { value: "anytime", label: "Anytime" },
+]
+
+interface FormState {
+  display_name: string
+  contact: string
+  island: string
+  skills: string[]
+  availability: string[]
+  notes: string
+  is_public: boolean
+  privacy_acknowledged: boolean
+}
+
+const defaultForm: FormState = {
+  display_name: "",
+  contact: "",
+  island: "",
+  skills: [],
+  availability: [],
+  notes: "",
+  is_public: false,
+  privacy_acknowledged: false,
+}
+
+function toggleItem(arr: string[], item: string): string[] {
+  return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item]
+}
+
+export default function VolunteerPage() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sheetId = searchParams.get("sheet")
+
+  const [sheetTitle, setSheetTitle] = useState<string | null>(null)
+  const [form, setForm] = useState<FormState>(defaultForm)
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    if (!sheetId) return
+    supabase
+      .from("volunteer_sheets")
+      .select("title")
+      .eq("id", sheetId)
+      .single()
+      .then(({ data }) => {
+        if (data) setSheetTitle(data.title)
+      })
+  }, [sheetId])
+
+  function set<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    setErrors((prev) => ({ ...prev, [key]: undefined }))
+  }
+
+  function validate(): boolean {
+    const e: Partial<Record<keyof FormState, string>> = {}
+    if (form.skills.length === 0) e.skills = "Select at least one skill."
+    if (!form.island) e.island = "Please select your island."
+    if (!form.privacy_acknowledged) e.privacy_acknowledged = "Please acknowledge the privacy notice."
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!validate()) return
+    setSubmitting(true)
+    try {
+      const { error } = await supabase.from("volunteer_signups").insert({
+        sheet_id: sheetId ?? null,
+        display_name: form.display_name.trim() || null,
+        contact: form.contact.trim() || null,
+        island: form.island as "guam" | "saipan" | "tinian" | "rota",
+        skills: form.skills,
+        availability: form.availability,
+        notes: form.notes.trim() || null,
+        is_public: form.is_public,
+        privacy_acknowledged: form.privacy_acknowledged,
+      })
+      if (error) throw error
+      setSubmitted(true)
+    } catch (err) {
+      console.error(err)
+      toast.error("Submission failed. Please try again.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="min-h-[calc(100vh-88px)] bg-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-6 py-8">
+          <div className="text-5xl">🙏</div>
+          <h2 className="text-2xl font-bold text-[#1E3A5F]">Thank You!</h2>
+          <p className="text-gray-600">
+            Your volunteer sign-up has been received. If you provided contact info, a coordinator
+            may reach out to arrange your involvement.
+          </p>
+          <div className="space-y-3">
+            <Button className="w-full h-12 bg-[#1E3A5F]" onClick={() => navigate("/volunteer/sheets")}>
+              See All Volunteer Sheets
+            </Button>
+            <Button variant="outline" className="w-full h-12" onClick={() => navigate("/")}>
+              Back to Directory
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-[calc(100vh-88px)] bg-white px-4 py-8">
+      <div className="max-w-xl mx-auto space-y-6">
+
+        {/* Back */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
+
+        {/* Header */}
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-[#1E3A5F]">Volunteer Sign-Up</h1>
+          {sheetTitle ? (
+            <p className="text-sm text-gray-600">
+              Signing up for: <span className="font-medium">{sheetTitle}</span>
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">
+              General volunteer sign-up — we'll match you to an opportunity.
+            </p>
+          )}
+        </div>
+
+        <Card>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} noValidate className="space-y-7">
+
+              {/* Privacy Notice */}
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                <strong>Privacy Notice:</strong> Your contact details may be shared with the
+                appropriate volunteer organization to coordinate your involvement. You can choose
+                to keep your name and details anonymous — only your skills will be shown publicly.
+              </div>
+
+              {/* Island */}
+              <fieldset className="space-y-2">
+                <Label className="text-base font-semibold">
+                  Your Island <span className="text-destructive">*</span>
+                </Label>
+                <Select value={form.island} onValueChange={(v) => set("island", v)}>
+                  <SelectTrigger className="h-12 text-base">
+                    <SelectValue placeholder="Select island…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="guam">Guam</SelectItem>
+                    <SelectItem value="saipan">Saipan</SelectItem>
+                    <SelectItem value="tinian">Tinian</SelectItem>
+                    <SelectItem value="rota">Rota</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.island && <p className="text-sm text-destructive">{errors.island}</p>}
+              </fieldset>
+
+              {/* Skills */}
+              <fieldset className="space-y-3">
+                <legend className="text-base font-semibold">
+                  How Can You Help? <span className="text-destructive">*</span>
+                </legend>
+                <div className="space-y-2">
+                  {SKILLS.map(({ value, label }) => (
+                    <label
+                      key={value}
+                      className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 cursor-pointer hover:bg-accent transition-colors has-[:checked]:border-[#1E3A5F] has-[:checked]:bg-[#1E3A5F]/5"
+                    >
+                      <Checkbox
+                        checked={form.skills.includes(value)}
+                        onCheckedChange={() => set("skills", toggleItem(form.skills, value))}
+                        className="h-5 w-5 flex-shrink-0"
+                      />
+                      <span className="text-sm">{label}</span>
+                    </label>
+                  ))}
+                </div>
+                {errors.skills && <p className="text-sm text-destructive">{errors.skills}</p>}
+              </fieldset>
+
+              {/* Availability */}
+              <fieldset className="space-y-3">
+                <legend className="text-base font-semibold">
+                  When Are You Available?{" "}
+                  <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                </legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {AVAILABILITY.map(({ value, label }) => (
+                    <label
+                      key={value}
+                      className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 cursor-pointer hover:bg-accent transition-colors has-[:checked]:border-[#1E3A5F] has-[:checked]:bg-[#1E3A5F]/5"
+                    >
+                      <Checkbox
+                        checked={form.availability.includes(value)}
+                        onCheckedChange={() => set("availability", toggleItem(form.availability, value))}
+                        className="h-4 w-4 flex-shrink-0"
+                      />
+                      <span className="text-xs">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+
+              {/* Public / Anonymous */}
+              <fieldset className="space-y-3">
+                <legend className="text-base font-semibold">Response Visibility</legend>
+                <div className="space-y-2">
+                  <label className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 cursor-pointer hover:bg-accent transition-colors has-[:checked]:border-[#1E3A5F] has-[:checked]:bg-[#1E3A5F]/5">
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={!form.is_public}
+                      onChange={() => set("is_public", false)}
+                      className="mt-0.5 flex-shrink-0"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">Anonymous</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Only your skills and availability are shown. Your name and contact details are kept private and only sent to the volunteer organization.
+                      </p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 cursor-pointer hover:bg-accent transition-colors has-[:checked]:border-[#1E3A5F] has-[:checked]:bg-[#1E3A5F]/5">
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={form.is_public}
+                      onChange={() => set("is_public", true)}
+                      className="mt-0.5 flex-shrink-0"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">Public</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Your name and skills are visible to volunteer coordinators and other helpers on the platform.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </fieldset>
+
+              {/* Name */}
+              <fieldset className="space-y-2">
+                <Label htmlFor="display_name" className="text-base font-semibold">
+                  Name or Alias{" "}
+                  <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <p className="text-xs text-muted-foreground">First name or a nickname is fine.</p>
+                <Input
+                  id="display_name"
+                  className="h-12 text-base"
+                  value={form.display_name}
+                  onChange={(e) => set("display_name", e.target.value)}
+                  placeholder="e.g. Maria or Anonymous"
+                />
+              </fieldset>
+
+              {/* Contact */}
+              <fieldset className="space-y-2">
+                <Label htmlFor="contact" className="text-base font-semibold">
+                  Contact (Phone or Email){" "}
+                  <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  So a coordinator can reach you. Not shown publicly unless you chose Public above.
+                </p>
+                <Input
+                  id="contact"
+                  className="h-12 text-base"
+                  value={form.contact}
+                  onChange={(e) => set("contact", e.target.value)}
+                  placeholder="(671) 555-0100 or you@example.com"
+                />
+              </fieldset>
+
+              {/* Notes */}
+              <fieldset className="space-y-2">
+                <Label htmlFor="notes" className="text-base font-semibold">
+                  Anything Else?{" "}
+                  <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <Textarea
+                  id="notes"
+                  className="text-base min-h-[80px]"
+                  value={form.notes}
+                  onChange={(e) => set("notes", e.target.value)}
+                  placeholder="Languages you speak, special skills, limitations, vehicle size, etc."
+                />
+              </fieldset>
+
+              {/* Privacy acknowledgment */}
+              <fieldset>
+                <label className="flex items-start gap-3 rounded-lg border-2 border-border bg-card px-4 py-3 cursor-pointer hover:bg-accent transition-colors has-[:checked]:border-[#1E3A5F] has-[:checked]:bg-[#1E3A5F]/5">
+                  <Checkbox
+                    checked={form.privacy_acknowledged}
+                    onCheckedChange={(v) => set("privacy_acknowledged", v === true)}
+                    className="h-5 w-5 mt-0.5 flex-shrink-0"
+                  />
+                  <p className="text-sm">
+                    I understand that my contact details may be shared with a volunteer organization to coordinate my involvement, and that I can choose to remain anonymous. <span className="text-destructive">*</span>
+                  </p>
+                </label>
+                {errors.privacy_acknowledged && (
+                  <p className="text-sm text-destructive mt-1">{errors.privacy_acknowledged}</p>
+                )}
+              </fieldset>
+
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full h-14 text-base bg-[#1E3A5F]"
+                disabled={submitting}
+              >
+                {submitting ? "Submitting…" : "Submit Volunteer Sign-Up"}
+              </Button>
+
+              <p className="text-xs text-center text-muted-foreground pb-2">
+                No account required. You can{" "}
+                <Link to="/volunteer/sheets" className="underline">browse all volunteer sheets</Link>{" "}
+                to find a specific opportunity.
+              </p>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center justify-center gap-1 text-xs text-gray-400 py-2">
+          Built with <Heart className="h-3 w-3 text-red-500 mx-1" /> by Guåhan.TECH for the Mariana Islands
+        </div>
+      </div>
+    </div>
+  )
+}

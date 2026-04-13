@@ -12,6 +12,8 @@ import CalendarPage from "@/pages/CalendarPage"
 import AdminDashboard from "@/pages/AdminDashboard"
 import LoginPage from "@/pages/LoginPage"
 import ContributePage from "@/pages/ContributePage"
+import VolunteerPage from "@/pages/VolunteerPage"
+import VolunteerSheetsPage from "@/pages/VolunteerSheetsPage"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -36,7 +38,30 @@ function LandingPage() {
         <Link to="/rota" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Rota</Link>
       </div>
       <p className="mt-4 text-xs text-gray-400">Select an island to view emergency services on the map</p>
-      <div className="mt-8 text-center text-sm text-gray-500 space-y-1">
+
+      {/* Volunteer CTA */}
+      <div className="mt-8 w-full max-w-md rounded-xl border-2 border-[#1E3A5F] bg-[#1E3A5F]/5 p-5">
+        <p className="text-sm font-semibold text-[#1E3A5F] mb-1">🙋 Want to help?</p>
+        <p className="text-xs text-gray-600 mb-3">
+          Sign up to volunteer with relief organizations. No account required.
+        </p>
+        <div className="flex gap-2">
+          <Link
+            to="/volunteer/sheets"
+            className="flex-1 bg-[#1E3A5F] text-white text-sm font-semibold rounded-lg py-2.5 text-center hover:bg-[#2a4f7a] transition"
+          >
+            See Volunteer Sheets →
+          </Link>
+          <Link
+            to="/volunteer"
+            className="flex-1 border border-[#1E3A5F] text-[#1E3A5F] text-sm font-semibold rounded-lg py-2.5 text-center hover:bg-[#1E3A5F]/10 transition"
+          >
+            General Sign-Up
+          </Link>
+        </div>
+      </div>
+
+      <div className="mt-6 text-center text-sm text-gray-500 space-y-1">
         <p><a href="tel:911" className="text-[#DC2626] font-bold">911</a> Emergency &nbsp;|&nbsp; <a href="tel:311" className="text-[#1E3A5F] font-bold">311</a> Non-Emergency</p>
         <p>FEMA: <a href="tel:18006213362" className="text-[#1E3A5F] font-bold">1-800-621-3362</a></p>
       </div>
@@ -83,6 +108,8 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/contribute" element={<ContributePage />} />
+          <Route path="/volunteer" element={<VolunteerPage />} />
+          <Route path="/volunteer/sheets" element={<VolunteerSheetsPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />
