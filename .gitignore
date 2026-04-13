@@ -1,8 +1,23 @@
-node_modules/
-.next/
+node_modules
+dist
+dist-ssr
+*.local
 .env
-.env.local
-.env.production
-.vercel
+.env.*
+!.env.example
+
+# TypeScript build artifacts
 *.tsbuildinfo
-.DS_Store
+vite.config.js
+vite.config.d.ts
+
+# Logs
+*.log
+
+# Vite dep pre-bundle cache
+.vite
+
+# Playwright MCP output
+.playwright-mcp/
+test-results/
+playwright-report/

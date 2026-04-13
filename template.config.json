@@ -1,0 +1,50 @@
+{
+  "template": "baku",
+  "version": "1.0.0",
+  "description": "Vite + React 18 + TypeScript SPA with Supabase, shadcn/ui, Tailwind CSS, TanStack Query, and React Router. Mobile-first PWA-ready template with auth, real-time, and social features scaffolded.",
+  "required": {
+    "PROJECT_NAME": {
+      "description": "Project name (used in package.json and page title)",
+      "example": "my-fitness-app"
+    },
+    "PAGE_TITLE": {
+      "description": "HTML page title shown in browser tab",
+      "example": "GPS Tracker"
+    },
+    "VITE_SUPABASE_URL": {
+      "description": "Supabase project URL",
+      "example": "https://abc123.supabase.co"
+    },
+    "VITE_SUPABASE_PUBLISHABLE_KEY": {
+      "description": "Supabase anon/public key",
+      "example": "eyJ..."
+    }
+  },
+  "optional": {
+    "DEV_PORT": {
+      "description": "Vite dev server port",
+      "default": "3000"
+    },
+    "ACCENT_COLOR": {
+      "description": "Primary accent color hex (for custom theming)",
+      "default": "#FF6B35"
+    }
+  },
+  "secrets": [
+    "VITE_SUPABASE_URL",
+    "VITE_SUPABASE_PUBLISHABLE_KEY"
+  ],
+  "stack": {
+    "runtime": "bun",
+    "framework": "react-18",
+    "language": "typescript",
+    "build": "vite",
+    "styling": "tailwindcss + shadcn/ui",
+    "database": "supabase (postgres + realtime)",
+    "routing": "react-router-dom",
+    "state": "tanstack-react-query",
+    "forms": "react-hook-form + zod",
+    "icons": "lucide-react",
+    "charts": "recharts"
+  }
+}

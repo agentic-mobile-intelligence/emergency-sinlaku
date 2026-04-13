@@ -1,83 +1,93 @@
-# Emergency Sinlaku — Mariana Islands Relief Service Directory
+# Baku Template
 
-**Domain:** sinlaku.directory.gu
+Vite + React 18 + TypeScript SPA with Supabase backend, shadcn/ui components, Tailwind CSS, TanStack React Query, and React Router.
 
-A public, map-based directory of emergency, support, and relief services for communities affected by Supertyphoon Sinlaku (April 2026). Covers Guam, Saipan, Tinian, and Rota.
+Mobile-first, dark-mode-ready, PWA-friendly starter for building data-rich applications with real-time features.
 
-## What This Is
+## What's Included
 
-- **Recipients** browse services by island, filter by need (food, shelter, water, medical), and request aid
-- **Service Providers** (FEMA, Red Cross, GovGuam, nonprofits, churches, businesses) register their offerings
-- **Map-first experience** with real-time status (Active / Planned / Closed)
-- **No sign-up required to browse** — public-first for maximum accessibility
-- **PWA installable** — works offline when cell towers are down
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Build | Vite 6 + Bun | Fast dev server + bundler |
+| UI | React 18 + TypeScript | Component framework |
+| Styling | Tailwind CSS + shadcn/ui | Design system (40+ components) |
+| Routing | React Router v6 | Client-side navigation |
+| Data | TanStack React Query | Server state management |
+| Database | Supabase (Postgres + Realtime) | Auth, DB, real-time subscriptions |
+| Forms | React Hook Form + Zod | Validation |
+| Icons | Lucide React | Icon library |
+| Charts | Recharts | Data visualization |
+| Toasts | Sonner | Notifications |
 
-## Islands
+## Quick Start
 
-- [sinlaku.directory.gu/guam](/) — Guam
-- [sinlaku.directory.gu/saipan](/saipan) — Saipan
-- [sinlaku.directory.gu/tinian](/tinian) — Tinian
-- [sinlaku.directory.gu/rota](/rota) — Rota
+```bash
+# 1. Initialize template
+./scripts/setup.sh
 
-## Tech Stack
+# 2. Set up environment
+cp .env.example .env
+# Fill in VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY
 
-- Next.js + Supabase (auth, DB, realtime)
-- OpenStreetMaps + Leaflet (map)
-- Cloudflare Pages + Workers (deploy)
-- PWA with service worker (offline support)
-- All times in Chamorro Standard Time (ChST, UTC+10)
+# 3. Install dependencies
+bun install
 
-## Key Features
+# 4. Apply database migrations
+npx supabase db push   # or apply migrations manually
 
-- Service cards with status indicators, badges, community testimonials
-- Aid request form (no PII — no SSN, no addresses)
-- Calendar view of service provider schedules (April 2026)
-- Emergency hotline banner on every page
-- Multi-language toggle (English authoritative, translations may be inaccurate)
-- Share via WhatsApp, Facebook, Instagram
-- Provider team access, auto-close on capacity
-- Admin dashboard with metrics and moderation
+# 5. Start dev server
+bun dev
+```
 
 ## Project Structure
 
 ```
-emergency-sinlaku/
-├── app/                    Next.js app routes
-│   ├── page.tsx            Landing page (island selector)
-│   ├── guam/               Guam service directory
-│   ├── saipan/             Saipan service directory
-│   ├── tinian/             Tinian service directory
-│   ├── rota/               Rota service directory
-│   ├── request-aid/        Aid request form
-│   ├── provider/           Provider registration + dashboard
-│   └── admin/              Admin dashboard
-├── components/
-│   ├── map/                OpenStreetMaps integration
-│   ├── cards/              Service cards (compact + expanded)
-│   ├── drawer/             Left sidebar with filters
-│   ├── calendar/           Unified April calendar view
-│   └── shared/             Header, footer, hotline banner
-├── lib/
-│   ├── supabase.ts         Supabase client
-│   └── types.ts            TypeScript types
-├── public/
-│   ├── manifest.json       PWA manifest
-│   └── sw.js               Service worker
-└── supabase/
-    └── migrations/         Database migrations
+src/
+  pages/          Page components (one per route)
+  components/     Reusable UI (shadcn/ui primitives + custom)
+  hooks/          Custom React hooks (auth, data fetching, features)
+  lib/            Utilities (Supabase client, helpers, exports)
+  types/          TypeScript type definitions
+  App.tsx         Main router + auth flow
+  main.tsx        React entry point
+  index.css       Tailwind + CSS variables (light/dark themes)
+
+supabase/
+  migrations/     Database schema migrations (SQL)
 ```
 
-## PRD
+## Conventions
 
-Full PRD at: `singlesourceoftruth/project_management/projects/john3-16/sub-projects/emergency-directory-gu/prds/emergency-directory-prd.md`
+- **Pages** go in `src/pages/` — one file per route
+- **Hooks** go in `src/hooks/` — one hook per feature domain
+- **UI primitives** in `src/components/ui/` — managed by shadcn/ui CLI
+- **Custom components** in `src/components/` — app-specific
+- **Path alias**: `@/` maps to `src/`
+- **Styling**: Tailwind utility classes + CSS variables for theming
 
-## Built By
+## Adding shadcn/ui Components
 
-manåha-built and fuetsa'd (powered) by [Guåhan.TECH](https://guahan.tech)
+```bash
+npx shadcn@latest add [component-name]
+```
 
----
+## Environment Variables
 
-**Emergency Contacts:**
-- 911 (Emergency)
-- 311 (Non-Emergency)
-- FEMA: 1-800-621-3362
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_SUPABASE_URL` | Yes | Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase anon/public key |
+
+## Deployment
+
+Ships with `vercel.json` for Vercel SPA deployment. Works with any static host:
+
+```bash
+bun run build    # Output in dist/
+```
+
+For Cloudflare Pages: `wrangler pages deploy dist/`
+
+## Origin
+
+Based on the GPS Tracker reference app. Domain-specific code (GPS, maps, social feed) is included as a working example — replace with your domain logic.
