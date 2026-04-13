@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? ''
-const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? ''
+const rc = (window as any).__RUNTIME_CONFIG__ ?? {}
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || rc.VITE_SUPABASE_URL || ''
+const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || rc.VITE_SUPABASE_PUBLISHABLE_KEY || ''
 
 if (!supabaseUrl || !supabaseKey) {
   console.warn(

@@ -7,3 +7,6 @@ application:
       path: /
       servicePorts:
         - 80
+      vars:
+        VITE_SUPABASE_URL: "PENDING_PRODUCTION_SUPABASE_URL"
+        VITE_SUPABASE_PUBLISHABLE_KEY: "PENDING_PRODUCTION_SUPABASE_KEY"
