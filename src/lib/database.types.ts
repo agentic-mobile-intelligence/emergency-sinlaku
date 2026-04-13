@@ -7,173 +7,209 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      comments: {
+      aid_requests: {
         Row: {
-          body: string
+          cannot_relocate: boolean
+          children_count: number | null
           created_at: string
+          disabled_count: number | null
+          dogs_nearby: boolean
+          elderly_count: number | null
+          email: string | null
+          household_size: number
           id: string
-          session_id: string
-          user_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          session_id: string
-          user_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          session_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comments_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      friendships: {
-        Row: {
-          addressee_id: string
-          created_at: string
-          id: string
-          requester_id: string
-          status: string
+          island: Database["public"]["Enums"]["island"]
+          landline_phone: string | null
+          medical_needs: Database["public"]["Enums"]["medical_need"][] | null
+          medical_notes: string | null
+          mobile_phone: string | null
+          name: string
+          needs: Database["public"]["Enums"]["service_type"][]
+          no_contact_explanation: string | null
+          notes: string | null
+          responded_by: string | null
+          safely_accessible: Database["public"]["Enums"]["accessibility"]
+          status: Database["public"]["Enums"]["request_status"]
           updated_at: string
         }
         Insert: {
-          addressee_id: string
+          cannot_relocate?: boolean
+          children_count?: number | null
           created_at?: string
+          disabled_count?: number | null
+          dogs_nearby?: boolean
+          elderly_count?: number | null
+          email?: string | null
+          household_size?: number
           id?: string
-          requester_id: string
-          status?: string
+          island: Database["public"]["Enums"]["island"]
+          landline_phone?: string | null
+          medical_needs?: Database["public"]["Enums"]["medical_need"][] | null
+          medical_notes?: string | null
+          mobile_phone?: string | null
+          name: string
+          needs?: Database["public"]["Enums"]["service_type"][]
+          no_contact_explanation?: string | null
+          notes?: string | null
+          responded_by?: string | null
+          safely_accessible?: Database["public"]["Enums"]["accessibility"]
+          status?: Database["public"]["Enums"]["request_status"]
           updated_at?: string
         }
         Update: {
-          addressee_id?: string
+          cannot_relocate?: boolean
+          children_count?: number | null
           created_at?: string
+          disabled_count?: number | null
+          dogs_nearby?: boolean
+          elderly_count?: number | null
+          email?: string | null
+          household_size?: number
           id?: string
-          requester_id?: string
-          status?: string
+          island?: Database["public"]["Enums"]["island"]
+          landline_phone?: string | null
+          medical_needs?: Database["public"]["Enums"]["medical_need"][] | null
+          medical_notes?: string | null
+          mobile_phone?: string | null
+          name?: string
+          needs?: Database["public"]["Enums"]["service_type"][]
+          no_contact_explanation?: string | null
+          notes?: string | null
+          responded_by?: string | null
+          safely_accessible?: Database["public"]["Enums"]["accessibility"]
+          status?: Database["public"]["Enums"]["request_status"]
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "friendships_addressee_id_fkey"
-            columns: ["addressee_id"]
+            foreignKeyName: "aid_requests_responded_by_fkey"
+            columns: ["responded_by"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "friendships_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
       }
-      kudos: {
+      offerings: {
         Row: {
+          capacity_max: number | null
+          capacity_text: string | null
           created_at: string
+          description: string | null
+          hours_text: string
           id: string
-          session_id: string
-          user_id: string
+          island: Database["public"]["Enums"]["island"]
+          location_lat: number | null
+          location_lng: number | null
+          location_text: string
+          name: string
+          organization_id: string
+          planned_end: string | null
+          planned_start: string | null
+          service_type: Database["public"]["Enums"]["service_type"]
+          status: Database["public"]["Enums"]["offering_status"]
+          updated_at: string
         }
         Insert: {
+          capacity_max?: number | null
+          capacity_text?: string | null
           created_at?: string
+          description?: string | null
+          hours_text: string
           id?: string
-          session_id: string
-          user_id: string
+          island: Database["public"]["Enums"]["island"]
+          location_lat?: number | null
+          location_lng?: number | null
+          location_text: string
+          name: string
+          organization_id: string
+          planned_end?: string | null
+          planned_start?: string | null
+          service_type: Database["public"]["Enums"]["service_type"]
+          status?: Database["public"]["Enums"]["offering_status"]
+          updated_at?: string
         }
         Update: {
+          capacity_max?: number | null
+          capacity_text?: string | null
           created_at?: string
+          description?: string | null
+          hours_text?: string
           id?: string
-          session_id?: string
-          user_id?: string
+          island?: Database["public"]["Enums"]["island"]
+          location_lat?: number | null
+          location_lng?: number | null
+          location_text?: string
+          name?: string
+          organization_id?: string
+          planned_end?: string | null
+          planned_start?: string | null
+          service_type?: Database["public"]["Enums"]["service_type"]
+          status?: Database["public"]["Enums"]["offering_status"]
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "kudos_session_id_fkey"
-            columns: ["session_id"]
+            foreignKeyName: "offerings_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "kudos_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
       }
-      points: {
+      organizations: {
         Row: {
-          accuracy: number | null
-          altitude: number | null
-          heading: number | null
-          id: number
-          lat: number
-          lng: number
-          session_id: string
-          speed: number | null
-          timestamp: number
+          contact_email: string | null
+          contact_phone: string
+          created_at: string
+          description: string | null
+          id: string
+          islands: Database["public"]["Enums"]["island"][]
+          name: string
+          service_types: Database["public"]["Enums"]["service_type"][]
+          updated_at: string
+          user_id: string
+          verification_requested: boolean
+          verified: boolean
+          whatsapp: string | null
         }
         Insert: {
-          accuracy?: number | null
-          altitude?: number | null
-          heading?: number | null
-          id?: never
-          lat: number
-          lng: number
-          session_id: string
-          speed?: number | null
-          timestamp: number
+          contact_email?: string | null
+          contact_phone: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          islands?: Database["public"]["Enums"]["island"][]
+          name: string
+          service_types?: Database["public"]["Enums"]["service_type"][]
+          updated_at?: string
+          user_id: string
+          verification_requested?: boolean
+          verified?: boolean
+          whatsapp?: string | null
         }
         Update: {
-          accuracy?: number | null
-          altitude?: number | null
-          heading?: number | null
-          id?: never
-          lat?: number
-          lng?: number
-          session_id?: string
-          speed?: number | null
-          timestamp?: number
+          contact_email?: string | null
+          contact_phone?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          islands?: Database["public"]["Enums"]["island"][]
+          name?: string
+          service_types?: Database["public"]["Enums"]["service_type"][]
+          updated_at?: string
+          user_id?: string
+          verification_requested?: boolean
+          verified?: boolean
+          whatsapp?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "points_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -181,107 +217,57 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          role: string
+          updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           display_name: string
           id: string
+          role?: string
+          updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string
           id?: string
+          role?: string
+          updated_at?: string
         }
         Relationships: []
       }
-      sessions: {
+      recipients: {
         Row: {
-          activity_type: string
-          avg_speed_kmh: number | null
+          contact_method: string | null
           created_at: string
-          distance_km: number | null
-          duration_ms: number | null
-          elevation_gain_m: number | null
-          ended_at: string | null
           id: string
-          max_speed_kmh: number | null
-          name: string | null
-          paused_at: string | null
-          point_count: number | null
-          share_mode: string
-          started_at: string
-          status: string
-          user_id: string
+          island: Database["public"]["Enums"]["island"]
+          name: string
+          needs: Database["public"]["Enums"]["service_type"][]
+          updated_at: string
+          user_id: string | null
         }
         Insert: {
-          activity_type?: string
-          avg_speed_kmh?: number | null
+          contact_method?: string | null
           created_at?: string
-          distance_km?: number | null
-          duration_ms?: number | null
-          elevation_gain_m?: number | null
-          ended_at?: string | null
           id?: string
-          max_speed_kmh?: number | null
-          name?: string | null
-          paused_at?: string | null
-          point_count?: number | null
-          share_mode?: string
-          started_at?: string
-          status?: string
-          user_id: string
+          island: Database["public"]["Enums"]["island"]
+          name: string
+          needs?: Database["public"]["Enums"]["service_type"][]
+          updated_at?: string
+          user_id?: string | null
         }
         Update: {
-          activity_type?: string
-          avg_speed_kmh?: number | null
+          contact_method?: string | null
           created_at?: string
-          distance_km?: number | null
-          duration_ms?: number | null
-          elevation_gain_m?: number | null
-          ended_at?: string | null
           id?: string
-          max_speed_kmh?: number | null
-          name?: string | null
-          paused_at?: string | null
-          point_count?: number | null
-          share_mode?: string
-          started_at?: string
-          status?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      weekly_goals: {
-        Row: {
-          created_at: string | null
-          goal_km: number
-          id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          goal_km?: number
-          id?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          goal_km?: number
-          id?: string
-          updated_at?: string | null
-          user_id?: string
+          island?: Database["public"]["Enums"]["island"]
+          name?: string
+          needs?: Database["public"]["Enums"]["service_type"][]
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -293,7 +279,26 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      accessibility: "yes" | "no" | "unsure"
+      island: "guam" | "saipan" | "tinian" | "rota"
+      medical_need:
+        | "wheelchair"
+        | "oxygen_ventilator"
+        | "dialysis"
+        | "insulin_medication"
+        | "mobility_aid"
+        | "other"
+      offering_status: "active" | "planned" | "at_capacity" | "closed"
+      request_status: "open" | "responding" | "fulfilled" | "unable"
+      service_type:
+        | "shelter"
+        | "food"
+        | "water"
+        | "medical"
+        | "tarps"
+        | "cleanup"
+        | "clothing"
+        | "transportation"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -420,6 +425,29 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      accessibility: ["yes", "no", "unsure"],
+      island: ["guam", "saipan", "tinian", "rota"],
+      medical_need: [
+        "wheelchair",
+        "oxygen_ventilator",
+        "dialysis",
+        "insulin_medication",
+        "mobility_aid",
+        "other",
+      ],
+      offering_status: ["active", "planned", "at_capacity", "closed"],
+      request_status: ["open", "responding", "fulfilled", "unable"],
+      service_type: [
+        "shelter",
+        "food",
+        "water",
+        "medical",
+        "tarps",
+        "cleanup",
+        "clothing",
+        "transportation",
+      ],
+    },
   },
 } as const
