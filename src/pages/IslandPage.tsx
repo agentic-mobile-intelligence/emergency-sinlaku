@@ -3,7 +3,7 @@ import { useParams, useNavigate, Navigate } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import { Filter, MapPin, Clock, Phone, ChevronDown, Home } from "lucide-react"
+import { Filter, MapPin, Clock, Phone, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -120,49 +120,26 @@ export default function IslandPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Emergency banner */}
-      <div className="bg-red-700 text-white text-sm py-2 px-4">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-center">
-          <span className="font-bold tracking-wide">EMERGENCY:</span>
-          <a href="tel:911" className="hover:underline font-semibold">911</a>
-          <a href="tel:311" className="hover:underline font-semibold">311</a>
-          <a href="tel:18006213362" className="hover:underline font-semibold">FEMA: 1-800-621-3362</a>
+      {/* Island selector bar */}
+      <div className="bg-gray-100 border-b px-4 py-2">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <span className="text-sm font-semibold text-gray-700">{meta.name}</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1 text-xs h-7">
+                Switch island <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {Object.entries(islandMeta).map(([slug, m]) => (
+                <DropdownMenuItem key={slug} onClick={() => navigate(`/${slug}`)} className="cursor-pointer">
+                  {m.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-
-      {/* Sticky header */}
-      <header className="sticky top-0 z-50 border-b border-blue-900/20 px-4 py-3" style={{ backgroundColor: BRAND }}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-white hover:text-blue-200">
-              <Home className="h-4 w-4" />
-              <span className="hidden sm:inline text-sm font-semibold">Home</span>
-            </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white gap-1 text-sm">
-                  {meta.name} <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {Object.entries(islandMeta).map(([slug, m]) => (
-                  <DropdownMenuItem key={slug} onClick={() => navigate(`/${slug}`)} className="cursor-pointer">
-                    {m.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="text-xs border-white/30 text-white bg-transparent hover:bg-white/10 hover:text-white min-h-[36px]" onClick={() => navigate("/request-aid")}>
-              Request Aid
-            </Button>
-            <Button size="sm" variant="outline" className="text-xs border-white/30 text-white bg-transparent hover:bg-white/10 hover:text-white min-h-[36px]" onClick={() => navigate("/provider/register")}>
-              I'm a Provider
-            </Button>
-          </div>
-        </div>
-      </header>
 
       {/* Main: drawer + map */}
       <div className="flex-1 flex flex-col md:flex-row relative">
