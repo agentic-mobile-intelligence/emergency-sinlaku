@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
 import HomePage from "@/pages/HomePage"
 import IslandPage from "@/pages/IslandPage"
-import RequestAidPage from "@/pages/RequestAidPage"
+import ProviderDashboardPage from './pages/ProviderDashboardPage'
 
 const toasterProps = {
   theme: "dark" as const,
@@ -29,10 +29,12 @@ function App() {
           <Route path="/tinian"  element={<IslandPage />} />
           <Route path="/rota"    element={<IslandPage />} />
           <Route path="/:island" element={<IslandPage />} />
-          <Route path="/request-aid" element={<RequestAidPage />} />
-          <Route path="/provider/register" element={<div className="p-8 text-center text-muted-foreground">Provider registration — coming soon</div>} />
-          <Route path="/provider/dashboard" element={<div className="p-8 text-center text-muted-foreground">Provider dashboard — coming soon</div>} />
-          <Route path="/admin" element={<div className="p-8 text-center text-muted-foreground">Admin dashboard — coming soon</div>} />
+
+          {/* Forms + dashboards */}
+          <Route path="/request-aid"        element={<Placeholder label="Aid request form" />} />
+          <Route path="/provider/register"  element={<Placeholder label="Provider registration" />} />
+          <Route path="/provider/dashboard" element={<ProviderDashboardPage />} />
+          <Route path="/admin"              element={<Placeholder label="Admin dashboard" />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />
