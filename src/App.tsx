@@ -10,6 +10,8 @@ import ProviderRegisterFailedPage from "@/pages/ProviderRegisterFailedPage"
 import AnonymousSupportPage from "@/pages/AnonymousSupportPage"
 import CalendarPage from "@/pages/CalendarPage"
 import AdminDashboard from "@/pages/AdminDashboard"
+import LoginPage from "@/pages/LoginPage"
+import ContributePage from "@/pages/ContributePage"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -38,6 +40,27 @@ function LandingPage() {
         <p><a href="tel:911" className="text-[#DC2626] font-bold">911</a> Emergency &nbsp;|&nbsp; <a href="tel:311" className="text-[#1E3A5F] font-bold">311</a> Non-Emergency</p>
         <p>FEMA: <a href="tel:18006213362" className="text-[#1E3A5F] font-bold">1-800-621-3362</a></p>
       </div>
+
+      {/* Footer */}
+      <div className="mt-16 pt-6 border-t border-gray-100 w-full max-w-md text-center text-xs text-gray-400 space-y-1">
+        <p>Built by Guåhan.TECH for the Mariana Islands community.</p>
+        <p>
+          Want to help improve this app?{" "}
+          <a
+            href="https://github.com/agentic-mobile-intelligence/emergency-sinlaku"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#1E3A5F] underline"
+          >
+            View on GitHub
+          </a>
+          {" "}or{" "}
+          <Link to="/contribute" className="text-[#1E3A5F] underline">
+            find collaboration instructions here
+          </Link>
+          .
+        </p>
+      </div>
     </div>
   )
 }
@@ -58,6 +81,8 @@ function App() {
           <Route path="/support/anonymous" element={<AnonymousSupportPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/contribute" element={<ContributePage />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />
