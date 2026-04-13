@@ -280,6 +280,9 @@ export default function IslandPage() {
                 <a href="https://forecast.weather.gov/product.php?issuedby=PQ1&product=HLS&site=gum" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
                   NWS Hurricane Local Statement
                 </a>
+                <a href="https://www.weather.gov/guam/" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
+                  NWS Guam — Weather Forecast Office
+                </a>
                 <a href="https://www.weather.gov/gum/Cyclones" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
                   NWS Guam Cyclones
                 </a>
