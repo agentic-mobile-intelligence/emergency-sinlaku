@@ -44,8 +44,8 @@ function App() {
   return (
     <>
       <BrowserRouter>
-        <EmergencyBanner />
         <StickyHeader />
+        <EmergencyBanner />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/guam" element={<IslandPage />} />
