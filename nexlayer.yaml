@@ -8,5 +8,5 @@ application:
       servicePorts:
         - 80
       vars:
-        VITE_SUPABASE_URL: "PENDING_PRODUCTION_SUPABASE_URL"
-        VITE_SUPABASE_PUBLISHABLE_KEY: "PENDING_PRODUCTION_SUPABASE_KEY"
+        VITE_SUPABASE_URL: "https://uukwajicnqgkuribktdl.supabase.co"
+        VITE_SUPABASE_PUBLISHABLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1a3dhamljbnFna3VyaWJrdGRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTQxNzQsImV4cCI6MjA5MTU5MDE3NH0.5y36fM0NYawX7kij46Kd8weHUdqPq-vhoFmfmZGnb54"
