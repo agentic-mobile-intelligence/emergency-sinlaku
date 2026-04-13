@@ -1,32 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
-import { useAuth } from "@/hooks/useAuth"
-import AuthPage from "@/pages/AuthPage"
-import HomePage from "@/pages/HomePage"
-import ProfilePage from "@/pages/ProfilePage"
-
-function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="px-4 py-3 border-b border-border flex items-center justify-between shrink-0">
-        <div className="text-sm font-bold tracking-wide uppercase">
-          {{PAGE_TITLE}}
-        </div>
-      </header>
-      <main className="flex-1">{children}</main>
-    </div>
-  )
-}
-
-function LoadingScreen() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-xs text-muted-foreground uppercase tracking-[4px] animate-pulse">
-        Loading
-      </div>
-    </div>
-  )
-}
+import LandingPage from "@/pages/LandingPage"
+import IslandPage from "@/pages/IslandPage"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -36,42 +11,17 @@ const toasterProps = {
 }
 
 function App() {
-  const { user, profile, loading, signUp, signIn, signOut, updateProfile } = useAuth()
-
-  if (loading) return <LoadingScreen />
-
-  if (!user) {
-    return (
-      <>
-        <BrowserRouter>
-          <Routes>
-            <Route path="*" element={<AuthPage onSignUp={signUp} onSignIn={signIn} />} />
-          </Routes>
-        </BrowserRouter>
-        <Toaster {...toasterProps} />
-      </>
-    )
-  }
-
   return (
     <>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={
-            <AppLayout>
-              <HomePage user={user} profile={profile} />
-            </AppLayout>
-          } />
-          <Route path="/profile" element={
-            <AppLayout>
-              <ProfilePage
-                profile={profile}
-                onSignOut={signOut}
-                onUpdateProfile={updateProfile}
-              />
-            </AppLayout>
-          } />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Public pages — no auth required to browse */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/:island" element={<IslandPage />} />
+          <Route path="/request-aid" element={<div className="p-8 text-center text-muted-foreground">Aid request form — coming soon</div>} />
+          <Route path="/provider/register" element={<div className="p-8 text-center text-muted-foreground">Provider registration — coming soon</div>} />
+          <Route path="/provider/dashboard" element={<div className="p-8 text-center text-muted-foreground">Provider dashboard — coming soon</div>} />
+          <Route path="/admin" element={<div className="p-8 text-center text-muted-foreground">Admin dashboard — coming soon</div>} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />
