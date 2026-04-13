@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
 import EmergencyBanner from "@/components/EmergencyBanner"
 import IslandPage from "@/pages/IslandPage"
@@ -25,18 +25,20 @@ function LandingPage() {
         Find emergency services, support, and relief resources for communities affected by Supertyphoon Sinlaku.
       </p>
       <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-        <a href="/guam" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Guam</a>
-        <a href="/saipan" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Saipan</a>
-        <a href="/tinian" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Tinian</a>
-        <a href="/rota" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Rota</a>
+        <Link to="/guam" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Guam</Link>
+        <Link to="/saipan" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Saipan</Link>
+        <Link to="/tinian" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Tinian</Link>
+        <Link to="/rota" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Rota</Link>
       </div>
+      <p className="mt-4 text-xs text-gray-400">Select an island to view emergency services on the map</p>
       <div className="mt-8 text-center text-sm text-gray-500 space-y-1">
         <p><a href="tel:911" className="text-[#DC2626] font-bold">911</a> Emergency &nbsp;|&nbsp; <a href="tel:311" className="text-[#1E3A5F] font-bold">311</a> Non-Emergency</p>
         <p>FEMA: <a href="tel:18006213362" className="text-[#1E3A5F] font-bold">1-800-621-3362</a></p>
       </div>
-      <div className="mt-6 flex gap-3">
-        <a href="/request-aid" className="bg-[#DC2626] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition">Request Aid</a>
-        <a href="/provider/register" className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">Register as Provider</a>
+      <div className="mt-6 flex flex-wrap gap-3 justify-center">
+        <Link to="/request-aid" className="bg-[#DC2626] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition">Sign up as Recipient</Link>
+        <Link to="/provider/register" className="border border-[#1E3A5F] text-[#1E3A5F] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">Sign up as Provider</Link>
+        <Link to="/login" className="text-[#1E3A5F] px-4 py-2 rounded-lg text-sm hover:underline transition">Have an account? Log in</Link>
       </div>
     </div>
   )
