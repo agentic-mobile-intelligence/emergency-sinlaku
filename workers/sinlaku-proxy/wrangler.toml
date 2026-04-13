@@ -3,5 +3,6 @@ main = "src/index.js"
 compatibility_date = "2024-12-01"
 
 routes = [
-  { pattern = "sinlaku.directory.gu/*", zone_id = "49ba2d02a23a424bfd9883d9a964e704" }
+  { pattern = "sinlaku.directory.gu/*", zone_id = "49ba2d02a23a424bfd9883d9a964e704" },
+  { pattern = "test-sinlaku.directory.gu/*", zone_id = "49ba2d02a23a424bfd9883d9a964e704" }
 ]
