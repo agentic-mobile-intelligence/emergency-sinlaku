@@ -282,6 +282,39 @@ export default function IslandPage() {
               ))}
             </div>
 
+            {/* Emergency Resources */}
+            <div className="space-y-2 pt-2 border-t">
+              <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold">
+                Emergency Resources
+              </div>
+              <div className="space-y-1.5 text-sm">
+                <a href="https://www.metoc.navy.mil/jtwc/jtwc.html" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
+                  JTWC — Joint Typhoon Warning Center
+                </a>
+                <a href="https://www.metoc.navy.mil/jtwc/products/wp0426web.txt" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
+                  TC Warning Text (Latest)
+                </a>
+                <a href="https://www.metoc.navy.mil/jtwc/products/wp0426.gif" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
+                  TC Warning Graphic
+                </a>
+                <a href="https://forecast.weather.gov/product.php?issuedby=PQ1&product=TCP&site=gum" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
+                  NWS Tropical Cyclone Advisory
+                </a>
+                <a href="https://forecast.weather.gov/product.php?issuedby=PQ1&product=HLS&site=gum" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
+                  NWS Hurricane Local Statement
+                </a>
+                <a href="https://www.weather.gov/gum/Cyclones" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
+                  NWS Guam Cyclones
+                </a>
+                <a href="https://zoom.earth/storms/sinlaku-2026/" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
+                  Zoom Earth — Sinlaku Live Tracker
+                </a>
+                <a href="https://ghs.guam.gov" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
+                  GovGuam Homeland Security / OCD
+                </a>
+              </div>
+            </div>
+
             {/* Request Aid CTA */}
             <Button className="w-full" style={{ backgroundColor: BRAND }} onClick={() => navigate("/request-aid")}>
               Request Aid
