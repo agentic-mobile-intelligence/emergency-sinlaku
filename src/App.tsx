@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
 import LandingPage from "@/pages/LandingPage"
 import IslandPage from "@/pages/IslandPage"
+import ProviderRegisterPage from "@/pages/ProviderRegisterPage"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -19,7 +20,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/:island" element={<IslandPage />} />
           <Route path="/request-aid" element={<div className="p-8 text-center text-muted-foreground">Aid request form — coming soon</div>} />
-          <Route path="/provider/register" element={<div className="p-8 text-center text-muted-foreground">Provider registration — coming soon</div>} />
+          <Route path="/provider/register" element={<ProviderRegisterPage />} />
           <Route path="/provider/dashboard" element={<div className="p-8 text-center text-muted-foreground">Provider dashboard — coming soon</div>} />
           <Route path="/admin" element={<div className="p-8 text-center text-muted-foreground">Admin dashboard — coming soon</div>} />
         </Routes>
