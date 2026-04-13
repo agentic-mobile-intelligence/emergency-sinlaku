@@ -1,8 +1,12 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
+import EmergencyBanner from "@/components/EmergencyBanner"
 import HomePage from "@/pages/HomePage"
 import IslandPage from "@/pages/IslandPage"
-import ProviderDashboardPage from './pages/ProviderDashboardPage'
+import AidRequestPage from "@/pages/AidRequestPage"
+import ProviderDashboardPage from "@/pages/ProviderDashboardPage"
+import CalendarPage from "@/pages/CalendarPage"
+import AdminDashboard from "@/pages/AdminDashboard"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -18,23 +22,25 @@ const Placeholder = ({ label }: { label: string }) => (
 function App() {
   return (
     <>
+      <EmergencyBanner />
       <BrowserRouter>
         <Routes>
           {/* Landing */}
           <Route path="/" element={<HomePage />} />
 
-          {/* Island pages — explicit routes + dynamic catch-all */}
-          <Route path="/guam"    element={<IslandPage />} />
-          <Route path="/saipan"  element={<IslandPage />} />
-          <Route path="/tinian"  element={<IslandPage />} />
-          <Route path="/rota"    element={<IslandPage />} />
+          {/* Island pages */}
+          <Route path="/guam" element={<IslandPage />} />
+          <Route path="/saipan" element={<IslandPage />} />
+          <Route path="/tinian" element={<IslandPage />} />
+          <Route path="/rota" element={<IslandPage />} />
           <Route path="/:island" element={<IslandPage />} />
 
           {/* Forms + dashboards */}
-          <Route path="/request-aid"        element={<Placeholder label="Aid request form" />} />
-          <Route path="/provider/register"  element={<Placeholder label="Provider registration" />} />
+          <Route path="/request-aid" element={<AidRequestPage />} />
+          <Route path="/provider/register" element={<Placeholder label="Provider registration" />} />
           <Route path="/provider/dashboard" element={<ProviderDashboardPage />} />
-          <Route path="/admin"              element={<Placeholder label="Admin dashboard" />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />
