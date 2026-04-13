@@ -48,10 +48,6 @@ function App() {
         <EmergencyBanner />
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/guam" element={<IslandPage />} />
-          <Route path="/saipan" element={<IslandPage />} />
-          <Route path="/tinian" element={<IslandPage />} />
-          <Route path="/rota" element={<IslandPage />} />
           <Route path="/:island" element={<IslandPage />} />
           <Route path="/request-aid" element={<RequestAidPage />} />
           <Route path="/provider/register" element={<ProviderRegisterPage />} />
