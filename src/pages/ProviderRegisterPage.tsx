@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { AlertTriangle, Loader2, CheckCircle2, MessageCircle } from "lucide-react"
+import { AlertTriangle, Loader2, CheckCircle2, MessageCircle, FlaskConical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,6 +32,27 @@ const ISLAND_OPTIONS: { value: Island; label: string }[] = [
   { value: "rota", label: "Rota" },
 ]
 
+// ── Dev sandbox fixtures ──────────────────────────────────────────────────────
+
+const DEV = import.meta.env.DEV
+
+const DEV_AUTH = {
+  email: "sandbox-provider@sinlaku.directory.gu",
+  password: "Sinlaku2026!",
+  displayName: "Sandbox Provider",
+}
+
+const DEV_ORG = {
+  id: "00000000-0000-0000-0001-000000000001",
+  name: "Guam Red Cross Emergency Shelter [SANDBOX]",
+  description: "[SANDBOX] Red Cross emergency shelter and feeding — Typhoon Sinlaku.",
+  contact_phone: "671-472-7234",
+  contact_email: "sandbox@sinlaku.directory.gu",
+  whatsapp: "+16714727234",
+  service_types: ["shelter", "food"] as ServiceType[],
+  islands: ["guam"] as Island[],
+}
+
 // ── Step 1: Auth ──────────────────────────────────────────────────────────────
 
 interface AuthStepProps {
@@ -42,9 +63,9 @@ interface AuthStepProps {
 
 function AuthStep({ onAuth, signUp, signIn }: AuthStepProps) {
   const [mode, setMode] = useState<"signup" | "signin">("signup")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [displayName, setDisplayName] = useState("")
+  const [email, setEmail] = useState(DEV ? DEV_AUTH.email : "")
+  const [password, setPassword] = useState(DEV ? DEV_AUTH.password : "")
+  const [displayName, setDisplayName] = useState(DEV ? DEV_AUTH.displayName : "")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -68,6 +89,13 @@ function AuthStep({ onAuth, signUp, signIn }: AuthStepProps) {
 
   return (
     <div className="space-y-6">
+      {DEV && (
+        <div data-testid="dev-sandbox-banner" className="flex items-center gap-2 rounded-md bg-violet-50 border border-violet-200 px-3 py-2 text-xs text-violet-700 font-medium">
+          <FlaskConical className="w-3.5 h-3.5 shrink-0" />
+          DEV — Sandbox credentials loaded
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-bold" style={{ color: "#1E3A5F" }}>
           {mode === "signup" ? "Create your provider account" : "Sign in to your account"}
@@ -164,17 +192,18 @@ interface OrgFormData {
 interface OrgStepProps {
   userId: string
   onDone: () => void
+  onError: (msg: string) => void
 }
 
-function OrgStep({ userId, onDone }: OrgStepProps) {
+function OrgStep({ userId, onDone, onError }: OrgStepProps) {
   const [form, setForm] = useState<OrgFormData>({
-    name: "",
-    description: "",
-    contact_phone: "",
-    contact_email: "",
-    whatsapp: "",
-    service_types: [],
-    islands: [],
+    name: DEV ? DEV_ORG.name : "",
+    description: DEV ? DEV_ORG.description : "",
+    contact_phone: DEV ? DEV_ORG.contact_phone : "",
+    contact_email: DEV ? DEV_ORG.contact_email : "",
+    whatsapp: DEV ? DEV_ORG.whatsapp : "",
+    service_types: DEV ? DEV_ORG.service_types : [],
+    islands: DEV ? DEV_ORG.islands : [],
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -212,21 +241,38 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
 
     setLoading(true)
     try {
-      // Insert organization
-      const { error: orgError } = await supabase.from("organizations").insert({
-        user_id: userId,
-        name: form.name.trim(),
-        description: form.description.trim() || null,
-        contact_phone: form.contact_phone.trim(),
-        contact_email: form.contact_email.trim() || null,
-        whatsapp: form.whatsapp.trim() || null,
-        service_types: form.service_types,
-        islands: form.islands,
-        verified: false,
-        verification_requested: false,
-      })
-
-      if (orgError) throw orgError
+      if (DEV) {
+        // Dev: upsert with fixed UUID — idempotent, safe to repeat
+        const { error: orgError } = await supabase.from("organizations").upsert({
+          id: DEV_ORG.id,
+          user_id: userId,
+          name: form.name.trim(),
+          description: form.description.trim() || null,
+          contact_phone: form.contact_phone.trim(),
+          contact_email: form.contact_email.trim() || null,
+          whatsapp: form.whatsapp.trim() || null,
+          service_types: form.service_types,
+          islands: form.islands,
+          verified: false,
+          verification_requested: false,
+        }, { onConflict: "id" })
+        if (orgError) throw orgError
+      } else {
+        // Prod: normal insert — one-time, permanent
+        const { error: orgError } = await supabase.from("organizations").insert({
+          user_id: userId,
+          name: form.name.trim(),
+          description: form.description.trim() || null,
+          contact_phone: form.contact_phone.trim(),
+          contact_email: form.contact_email.trim() || null,
+          whatsapp: form.whatsapp.trim() || null,
+          service_types: form.service_types,
+          islands: form.islands,
+          verified: false,
+          verification_requested: false,
+        })
+        if (orgError) throw orgError
+      }
 
       // Update profile role to 'provider'
       const { error: profileError } = await supabase
@@ -242,6 +288,7 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
       const msg = err instanceof Error ? err.message : "Registration failed. Please try again."
       setError(msg)
       toast.error(msg)
+      onError(msg)
     } finally {
       setLoading(false)
     }
@@ -249,6 +296,13 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {DEV && (
+        <div data-testid="dev-org-banner" className="flex items-center gap-2 rounded-md bg-violet-50 border border-violet-200 px-3 py-2 text-xs text-violet-700 font-medium">
+          <FlaskConical className="w-3.5 h-3.5 shrink-0" />
+          DEV — Org form pre-filled with sandbox data
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-bold" style={{ color: "#1E3A5F" }}>
           Register your organization
@@ -258,7 +312,6 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
         </p>
       </div>
 
-      {/* Organization name */}
       <div className="space-y-1.5">
         <Label htmlFor="org-name">
           Organization name <span className="text-destructive">*</span>
@@ -273,7 +326,6 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
         />
       </div>
 
-      {/* Description */}
       <div className="space-y-1.5">
         <Label htmlFor="org-description">Description</Label>
         <Textarea
@@ -285,7 +337,6 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
         />
       </div>
 
-      {/* Contact phone */}
       <div className="space-y-1.5">
         <Label htmlFor="org-phone">
           Contact phone <span className="text-destructive">*</span>
@@ -300,7 +351,6 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
         />
       </div>
 
-      {/* Contact email */}
       <div className="space-y-1.5">
         <Label htmlFor="org-email">Contact email</Label>
         <Input
@@ -312,7 +362,6 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
         />
       </div>
 
-      {/* WhatsApp */}
       <div className="space-y-1.5">
         <Label htmlFor="org-whatsapp">WhatsApp number</Label>
         <Input
@@ -324,7 +373,6 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
         />
       </div>
 
-      {/* Service types */}
       <div className="space-y-3">
         <Label>Services offered</Label>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -343,7 +391,6 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
         </div>
       </div>
 
-      {/* Islands */}
       <div className="space-y-3">
         <Label>Islands served</Label>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -362,7 +409,6 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
         </div>
       </div>
 
-      {/* Verification note */}
       <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 flex gap-3 text-sm text-amber-800">
         <MessageCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
         <p>
@@ -372,7 +418,18 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
       </div>
 
       {error && (
-        <p className="text-sm text-destructive">{error}</p>
+        <div className="space-y-2">
+          <p className="text-sm text-destructive">{error}</p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-xs border-destructive text-destructive hover:bg-destructive hover:text-white"
+            onClick={() => onError(error)}
+          >
+            Get help registering →
+          </Button>
+        </div>
       )}
 
       <Button
@@ -396,8 +453,6 @@ function OrgStep({ userId, onDone }: OrgStepProps) {
 export default function ProviderRegisterPage() {
   const navigate = useNavigate()
   const { user, loading: authLoading, signUp, signIn } = useAuth()
-
-  // Determine which step to show
   const [step, setStep] = useState<"auth" | "org" | "done">("auth")
 
   useEffect(() => {
@@ -406,18 +461,19 @@ export default function ProviderRegisterPage() {
     }
   }, [authLoading, user])
 
-  const handleAuthDone = () => {
-    setStep("org")
-  }
+  const handleAuthDone = () => setStep("org")
 
   const handleOrgDone = () => {
     setStep("done")
     navigate("/provider/dashboard")
   }
 
+  const handleOrgError = (msg: string) => {
+    navigate("/provider/register/failed", { state: { error: msg } })
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-destructive/90 backdrop-blur-sm border-b border-destructive/50 px-4 py-2">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <button
@@ -433,10 +489,8 @@ export default function ProviderRegisterPage() {
         </div>
       </header>
 
-      {/* Content */}
       <main className="flex-1 flex flex-col items-center justify-start px-4 py-10">
         <div className="w-full max-w-lg">
-          {/* Page title */}
           <div className="mb-8 text-center space-y-1">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Provider Portal
@@ -444,7 +498,6 @@ export default function ProviderRegisterPage() {
             <h1 className="text-2xl font-bold tracking-tight">Register as a Relief Provider</h1>
           </div>
 
-          {/* Step indicator */}
           {step !== "done" && (
             <div className="flex items-center gap-2 mb-8">
               <div
@@ -472,7 +525,6 @@ export default function ProviderRegisterPage() {
             </div>
           )}
 
-          {/* Card */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
             {authLoading ? (
               <div className="flex justify-center py-8">
@@ -481,7 +533,7 @@ export default function ProviderRegisterPage() {
             ) : step === "auth" ? (
               <AuthStep onAuth={handleAuthDone} signUp={signUp} signIn={signIn} />
             ) : step === "org" && user ? (
-              <OrgStep userId={user.id} onDone={handleOrgDone} />
+              <OrgStep userId={user.id} onDone={handleOrgDone} onError={handleOrgError} />
             ) : null}
           </div>
         </div>
