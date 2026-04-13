@@ -1,0 +1,9 @@
+application:
+  name: emergency-sinlaku
+  url: sinlaku.directory.gu
+  pods:
+    - name: web
+      image: registry.nexlayer.io/nexlayer-mcp/emergency-sinlaku:latest
+      path: /
+      servicePorts:
+        - 80
