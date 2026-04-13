@@ -6,6 +6,8 @@ import IslandPage from "@/pages/IslandPage"
 import RequestAidPage from "@/pages/RequestAidPage"
 import ProviderRegisterPage from "@/pages/ProviderRegisterPage"
 import ProviderDashboardPage from "@/pages/ProviderDashboardPage"
+import ProviderRegisterFailedPage from "@/pages/ProviderRegisterFailedPage"
+import AnonymousSupportPage from "@/pages/AnonymousSupportPage"
 import CalendarPage from "@/pages/CalendarPage"
 import AdminDashboard from "@/pages/AdminDashboard"
 
@@ -51,7 +53,9 @@ function App() {
           <Route path="/:island" element={<IslandPage />} />
           <Route path="/request-aid" element={<RequestAidPage />} />
           <Route path="/provider/register" element={<ProviderRegisterPage />} />
+          <Route path="/provider/register/failed" element={<ProviderRegisterFailedPage />} />
           <Route path="/provider/dashboard" element={<ProviderDashboardPage />} />
+          <Route path="/support/anonymous" element={<AnonymousSupportPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
