@@ -77,13 +77,40 @@ Built on the john3-16 business directory codebase — same map pattern, same car
 
 ### Persona 3: Admin (Jay / Guahan Tech)
 
-**Who:** Platform administrator.
+**Who:** Platform administrator (Guåhan.TECH team).
 
 **Journey:**
-1. Reviews service provider registrations
-2. Performs manual verification via WhatsApp
-3. Monitors aid request volume
-4. Updates situation reports per island
+1. Signs in — auto-promoted to `admin` role by DB trigger
+2. Sees "Admin" button in sticky header (replaces "Dashboard")
+3. Opens `/admin` — four-tab dashboard
+
+**Access Control:**
+| Role | How assigned | Access |
+|---|---|---|
+| `admin` | DB trigger on `socials@guahan.tech` email | `/admin` + all data |
+| `provider` | Set on org registration completion | `/provider/dashboard` |
+| `unverified` | Default for all new sign-ups | Public pages only |
+
+**Admin Dashboard tabs:**
+
+1. **Overview** — system-wide stats
+   - Aid request totals (fulfilled %, pending %)
+   - Breakdown by island and need type
+
+2. **Organizations** — org management
+   - Prioritized by verification queue (pending first)
+   - One-click Verify / Unverify per org
+   - Contact info, islands, service types visible
+
+3. **Volunteers** — sign-up management
+   - All general volunteer sign-ups (admin sees private ones too)
+   - All volunteer leader sign-ups (skills, experience, team capacity)
+
+4. **Users** — profile & role management
+   - All registered profiles with email and role
+   - Inline role dropdown (admin / provider / unverified / recipient)
+
+**Route guard:** `/admin` redirects non-admin users to `/` with an error toast.
 
 ---
 

@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/clerk-react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import App from './App'
+import { UserRoleProvider } from './contexts/UserRoleContext'
 import 'leaflet/dist/leaflet.css';
 import './index.css'
 
@@ -17,7 +18,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY ?? ''} afterSignOutUrl="/">
       <QueryClientProvider client={queryClient}>
-        <App />
+        <UserRoleProvider>
+          <App />
+        </UserRoleProvider>
       </QueryClientProvider>
     </ClerkProvider>
   </React.StrictMode>,

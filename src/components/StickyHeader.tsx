@@ -1,10 +1,12 @@
 import { Link, useLocation } from "react-router-dom"
 import { Home } from "lucide-react"
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react"
+import { useUserRole } from "@/contexts/UserRoleContext"
 
 export default function StickyHeader() {
   const location = useLocation()
   const isLanding = location.pathname === "/"
+  const { isAdmin } = useUserRole()
 
   return (
     <header className="sticky top-0 z-40 bg-[#1E3A5F] text-white shadow-md">
@@ -45,13 +47,22 @@ export default function StickyHeader() {
           </SignedOut>
 
           <SignedIn>
-            <Link
-              to="/provider/dashboard"
-              className="border border-white/50 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-white/10 transition hidden sm:block"
-            >
-              Dashboard
-            </Link>
-            {/* UserButton shows avatar + sign-out menu */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="bg-destructive/80 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-destructive transition hidden sm:block"
+              >
+                Admin
+              </Link>
+            )}
+            {!isAdmin && (
+              <Link
+                to="/provider/dashboard"
+                className="border border-white/50 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-white/10 transition hidden sm:block"
+              >
+                Dashboard
+              </Link>
+            )}
             <UserButton afterSignOutUrl="/" />
           </SignedIn>
         </div>

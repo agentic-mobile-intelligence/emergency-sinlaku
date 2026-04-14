@@ -13,28 +13,38 @@
  *   Signing algorithm: HS256
  *   Signing key: paste Supabase project JWT secret
  *   Claims: { "sub": "{{user.id}}" }
+ *
+ * Role is read from the profiles table via UserRoleContext (single upsert
+ * per session). socials@guahan.tech is auto-promoted to admin by a DB trigger.
  */
 
 import { useMemo } from "react"
 import { useUser, useClerk, useSession } from "@clerk/clerk-react"
 import { createAuthClient } from "@/lib/supabase"
+import { useUserRole } from "@/contexts/UserRoleContext"
 
 export function useAuth() {
   const { user, isLoaded } = useUser()
   const { signOut } = useClerk()
   const { session } = useSession()
+  const { role, isAdmin } = useUserRole()
 
   const supabaseClient = useMemo(
     () =>
       createAuthClient(async () => {
         if (!session) return null
-        return session.getToken({ template: "supabase" })
+        try {
+          return await session.getToken({ template: "supabase" })
+        } catch {
+          // JWT template "supabase" may not exist in dev instance — fall back to anon key
+          console.warn("Clerk: failed to get supabase JWT — using anon key (reads only)")
+          return null
+        }
       }),
-    [session]
+    [session],
   )
 
   return {
-    // Normalised user shape — rest of app uses user.id and user.email
     user: user
       ? {
           id: user.id,
@@ -42,7 +52,6 @@ export function useAuth() {
         }
       : null,
 
-    // Profile-like object built from Clerk user data
     profile: user
       ? {
           id: user.id,
@@ -54,11 +63,13 @@ export function useAuth() {
             "",
           avatar_url: user.imageUrl ?? null,
           created_at: user.createdAt?.toISOString() ?? "",
-          role: "provider" as const,
+          role: role ?? "unverified",
         }
       : null,
 
     loading: !isLoaded,
+    role,
+    isAdmin,
     signOut,
 
     // Supabase client with Clerk JWT injected — use this for all authenticated writes
