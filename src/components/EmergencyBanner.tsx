@@ -10,6 +10,7 @@ const MARQUEE_LINKS = [
   { label: "GHS/OCD Facebook", href: "https://www.facebook.com/GHSOCD/" },
   { label: "JRM Facebook", href: "https://www.facebook.com/jrmguam" },
   { label: "JTF-M Facebook", href: "https://www.facebook.com/1CdEchVcDs/" },
+  { label: "JTWC Typhoon Tracking", href: "https://www.metoc.navy.mil/jtwc/jtwc.html" },
 ]
 
 function MarqueeContent() {
