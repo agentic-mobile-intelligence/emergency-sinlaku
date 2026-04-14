@@ -155,7 +155,11 @@ export type Database = {
           description: string | null
           id: string
           islands: Database["public"]["Enums"]["island"][]
+          location_lat: number | null
+          location_lng: number | null
+          mailing_address: string | null
           name: string
+          physical_address: string | null
           service_types: Database["public"]["Enums"]["service_type"][]
           updated_at: string
           user_id: string | null
@@ -170,7 +174,11 @@ export type Database = {
           description?: string | null
           id?: string
           islands?: Database["public"]["Enums"]["island"][]
+          location_lat?: number | null
+          location_lng?: number | null
+          mailing_address?: string | null
           name: string
+          physical_address?: string | null
           service_types?: Database["public"]["Enums"]["service_type"][]
           updated_at?: string
           user_id?: string | null
@@ -185,7 +193,11 @@ export type Database = {
           description?: string | null
           id?: string
           islands?: Database["public"]["Enums"]["island"][]
+          location_lat?: number | null
+          location_lng?: number | null
+          mailing_address?: string | null
           name?: string
+          physical_address?: string | null
           service_types?: Database["public"]["Enums"]["service_type"][]
           updated_at?: string
           user_id?: string | null
@@ -198,21 +210,27 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          clerk_user_id: string | null
           created_at: string
           display_name: string
           id: string
+          role: string
         }
         Insert: {
           avatar_url?: string | null
+          clerk_user_id?: string | null
           created_at?: string
           display_name: string
           id: string
+          role?: string
         }
         Update: {
           avatar_url?: string | null
+          clerk_user_id?: string | null
           created_at?: string
           display_name?: string
           id?: string
+          role?: string
         }
         Relationships: []
       }
@@ -249,135 +267,135 @@ export type Database = {
         }
         Relationships: []
       }
-      volunteer_sheets: {
+      volunteer_leader_signups: {
         Row: {
-          id: string
-          title: string
-          organization_name: string
-          description: string | null
-          island: Database["public"]["Enums"]["island"]
-          skills_needed: Database["public"]["Enums"]["volunteer_skill"][]
-          date_text: string | null
-          capacity: number | null
-          signup_count: number
-          contact_info: string | null
-          status: Database["public"]["Enums"]["offering_status"]
+          availability: Database["public"]["Enums"]["volunteer_availability"][]
+          contact: string | null
           created_at: string
+          display_name: string | null
+          experience: string | null
+          id: string
+          is_public: boolean
+          island: Database["public"]["Enums"]["island"] | null
+          notes: string | null
+          privacy_acknowledged: boolean
+          skills: Database["public"]["Enums"]["volunteer_skill"][]
+          team_capacity: number | null
         }
         Insert: {
-          id?: string
-          title: string
-          organization_name: string
-          description?: string | null
-          island: Database["public"]["Enums"]["island"]
-          skills_needed?: Database["public"]["Enums"]["volunteer_skill"][]
-          date_text?: string | null
-          capacity?: number | null
-          signup_count?: number
-          contact_info?: string | null
-          status?: Database["public"]["Enums"]["offering_status"]
+          availability?: Database["public"]["Enums"]["volunteer_availability"][]
+          contact?: string | null
           created_at?: string
+          display_name?: string | null
+          experience?: string | null
+          id?: string
+          is_public?: boolean
+          island?: Database["public"]["Enums"]["island"] | null
+          notes?: string | null
+          privacy_acknowledged: boolean
+          skills?: Database["public"]["Enums"]["volunteer_skill"][]
+          team_capacity?: number | null
         }
         Update: {
-          id?: string
-          title?: string
-          organization_name?: string
-          description?: string | null
-          island?: Database["public"]["Enums"]["island"]
-          skills_needed?: Database["public"]["Enums"]["volunteer_skill"][]
-          date_text?: string | null
-          capacity?: number | null
-          signup_count?: number
-          contact_info?: string | null
-          status?: Database["public"]["Enums"]["offering_status"]
+          availability?: Database["public"]["Enums"]["volunteer_availability"][]
+          contact?: string | null
           created_at?: string
+          display_name?: string | null
+          experience?: string | null
+          id?: string
+          is_public?: boolean
+          island?: Database["public"]["Enums"]["island"] | null
+          notes?: string | null
+          privacy_acknowledged?: boolean
+          skills?: Database["public"]["Enums"]["volunteer_skill"][]
+          team_capacity?: number | null
         }
         Relationships: []
       }
-      volunteer_leader_signups: {
+      volunteer_sheets: {
         Row: {
-          id: string
-          display_name: string | null
-          contact: string | null
-          island: Database["public"]["Enums"]["island"] | null
-          skills: Database["public"]["Enums"]["volunteer_skill"][]
-          availability: Database["public"]["Enums"]["volunteer_availability"][]
-          experience: string | null
-          team_capacity: number | null
-          notes: string | null
-          is_public: boolean
-          privacy_acknowledged: boolean
+          capacity: number | null
+          contact_info: string | null
           created_at: string
+          date_text: string | null
+          description: string | null
+          id: string
+          island: Database["public"]["Enums"]["island"]
+          organization_name: string
+          signup_count: number
+          skills_needed: Database["public"]["Enums"]["volunteer_skill"][]
+          status: Database["public"]["Enums"]["offering_status"]
+          title: string
         }
         Insert: {
-          id?: string
-          display_name?: string | null
-          contact?: string | null
-          island?: Database["public"]["Enums"]["island"] | null
-          skills?: Database["public"]["Enums"]["volunteer_skill"][]
-          availability?: Database["public"]["Enums"]["volunteer_availability"][]
-          experience?: string | null
-          team_capacity?: number | null
-          notes?: string | null
-          is_public?: boolean
-          privacy_acknowledged: boolean
+          capacity?: number | null
+          contact_info?: string | null
           created_at?: string
+          date_text?: string | null
+          description?: string | null
+          id?: string
+          island: Database["public"]["Enums"]["island"]
+          organization_name: string
+          signup_count?: number
+          skills_needed?: Database["public"]["Enums"]["volunteer_skill"][]
+          status?: Database["public"]["Enums"]["offering_status"]
+          title: string
         }
         Update: {
-          id?: string
-          display_name?: string | null
-          contact?: string | null
-          island?: Database["public"]["Enums"]["island"] | null
-          skills?: Database["public"]["Enums"]["volunteer_skill"][]
-          availability?: Database["public"]["Enums"]["volunteer_availability"][]
-          experience?: string | null
-          team_capacity?: number | null
-          notes?: string | null
-          is_public?: boolean
-          privacy_acknowledged?: boolean
+          capacity?: number | null
+          contact_info?: string | null
           created_at?: string
+          date_text?: string | null
+          description?: string | null
+          id?: string
+          island?: Database["public"]["Enums"]["island"]
+          organization_name?: string
+          signup_count?: number
+          skills_needed?: Database["public"]["Enums"]["volunteer_skill"][]
+          status?: Database["public"]["Enums"]["offering_status"]
+          title?: string
         }
         Relationships: []
       }
       volunteer_signups: {
         Row: {
-          id: string
-          sheet_id: string | null
-          display_name: string | null
-          contact: string | null
-          island: Database["public"]["Enums"]["island"] | null
-          skills: Database["public"]["Enums"]["volunteer_skill"][]
           availability: Database["public"]["Enums"]["volunteer_availability"][]
-          notes: string | null
-          is_public: boolean
-          privacy_acknowledged: boolean
+          contact: string | null
           created_at: string
+          display_name: string | null
+          id: string
+          is_public: boolean
+          island: Database["public"]["Enums"]["island"] | null
+          notes: string | null
+          privacy_acknowledged: boolean
+          sheet_id: string | null
+          skills: Database["public"]["Enums"]["volunteer_skill"][]
         }
         Insert: {
-          id?: string
-          sheet_id?: string | null
-          display_name?: string | null
-          contact?: string | null
-          island?: Database["public"]["Enums"]["island"] | null
-          skills?: Database["public"]["Enums"]["volunteer_skill"][]
           availability?: Database["public"]["Enums"]["volunteer_availability"][]
-          notes?: string | null
-          is_public?: boolean
-          privacy_acknowledged: boolean
+          contact?: string | null
           created_at?: string
+          display_name?: string | null
+          id?: string
+          is_public?: boolean
+          island?: Database["public"]["Enums"]["island"] | null
+          notes?: string | null
+          privacy_acknowledged?: boolean
+          sheet_id?: string | null
+          skills?: Database["public"]["Enums"]["volunteer_skill"][]
         }
         Update: {
-          id?: string
-          sheet_id?: string | null
-          display_name?: string | null
-          contact?: string | null
-          island?: Database["public"]["Enums"]["island"] | null
-          skills?: Database["public"]["Enums"]["volunteer_skill"][]
           availability?: Database["public"]["Enums"]["volunteer_availability"][]
-          notes?: string | null
-          is_public?: boolean
-          privacy_acknowledged?: boolean
+          contact?: string | null
           created_at?: string
+          display_name?: string | null
+          id?: string
+          is_public?: boolean
+          island?: Database["public"]["Enums"]["island"] | null
+          notes?: string | null
+          privacy_acknowledged?: boolean
+          sheet_id?: string | null
+          skills?: Database["public"]["Enums"]["volunteer_skill"][]
         }
         Relationships: [
           {
@@ -411,6 +429,14 @@ export type Database = {
         | "clothing"
         | "transportation"
         | "information"
+      volunteer_availability:
+        | "weekday_mornings"
+        | "weekday_afternoons"
+        | "weekday_evenings"
+        | "weekend_mornings"
+        | "weekend_afternoons"
+        | "weekend_evenings"
+        | "anytime"
       volunteer_skill:
         | "cleanup"
         | "food_distribution"
@@ -422,14 +448,6 @@ export type Database = {
         | "translation"
         | "general_labor"
         | "other"
-      volunteer_availability:
-        | "weekday_mornings"
-        | "weekday_afternoons"
-        | "weekday_evenings"
-        | "weekend_mornings"
-        | "weekend_afternoons"
-        | "weekend_evenings"
-        | "anytime"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -571,6 +589,27 @@ export const Constants = {
         "clothing",
         "transportation",
         "information",
+      ],
+      volunteer_availability: [
+        "weekday_mornings",
+        "weekday_afternoons",
+        "weekday_evenings",
+        "weekend_mornings",
+        "weekend_afternoons",
+        "weekend_evenings",
+        "anytime",
+      ],
+      volunteer_skill: [
+        "cleanup",
+        "food_distribution",
+        "shelter_management",
+        "transportation",
+        "medical_support",
+        "emotional_support",
+        "childcare",
+        "translation",
+        "general_labor",
+        "other",
       ],
     },
   },
