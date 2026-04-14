@@ -130,10 +130,13 @@ export default function ProviderDashboardPage() {
       .select("*")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.warn("org fetch:", error.message)
         setOrg(data)
         setOrgLoading(false)
       })
+      .catch(() => setOrgLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   useEffect(() => {
@@ -144,10 +147,13 @@ export default function ProviderDashboardPage() {
       .select("*")
       .eq("organization_id", org.id)
       .order("created_at", { ascending: false })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.warn("offerings fetch:", error.message)
         setOfferings(data ?? [])
         setOfferingsLoading(false)
       })
+      .catch(() => setOfferingsLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [org])
 
   useEffect(() => {
@@ -156,10 +162,13 @@ export default function ProviderDashboardPage() {
       .from("aid_requests")
       .select("*")
       .order("created_at", { ascending: false })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.warn("requests fetch:", error.message)
         setRequests(data ?? [])
         setRequestsLoading(false)
       })
+      .catch(() => setRequestsLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const startEditOrg = () => {
