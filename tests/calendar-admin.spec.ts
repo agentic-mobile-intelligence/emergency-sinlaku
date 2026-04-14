@@ -22,8 +22,9 @@ test.describe("T-SH: Share & Community", () => {
     const pages = ["/", "/guam", "/request-aid", "/provider/register", "/calendar"]
     for (const path of pages) {
       await page.goto(path)
-      // EmergencyBanner (red bar) always shows "911 Emergency" link — unique accessible name
-      await expect(page.getByRole("link", { name: "911 Emergency" })).toBeVisible()
+      // EmergencyBanner renders MarqueeContent twice for infinite scroll — use .first()
+      // to avoid strict-mode violation from the duplicate "911 Emergency" link.
+      await expect(page.getByRole("link", { name: "911 Emergency" }).first()).toBeVisible()
     }
   })
 })
