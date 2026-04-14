@@ -1,12 +1,13 @@
 application:
   name: emergency-sinlaku-dev
+  url: TEST-sinlaku.directory.gu
   registryLogin:
     registry: gitea.elizaga.dev
     username: jay-elizaga-dev-gitea
     personalAccessToken: ae1bf47e5bc805289b93a40db523cbfe09b428bb
   pods:
     - name: web
-      image: gitea.elizaga.dev/jay-elizaga-dev-gitea/directory-gu:latest
+      image: gitea.elizaga.dev/directory-gu/emergency-sinlaku:a44323f
       path: /
       servicePorts:
         - 80

@@ -23,15 +23,14 @@ export default function StickyHeader() {
 
         {/* Right: CTAs + auth */}
         <div className="flex items-center gap-2">
-          <Link
-            to="/request-aid"
-            className="bg-[#DC2626] text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-red-700 transition"
-          >
-            Sign up as Recipient
-          </Link>
-
           {/* Provider sign-up always goes to /provider/register (org form follows auth) */}
           <SignedOut>
+            <Link
+              to="/request-aid"
+              className="bg-[#DC2626] text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-red-700 transition"
+            >
+              Sign up as Recipient
+            </Link>
             <Link
               to="/provider/register"
               className="border border-white/50 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-white/10 transition"

@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { AlertTriangle, Loader2, CheckCircle2, MessageCircle, FlaskConical } from "lucide-react"
+import { AlertTriangle, Loader2, CheckCircle2, MessageCircle, FlaskConical, MapPin } from "lucide-react"
 import { useSignUp, useSignIn, useUser } from "@clerk/clerk-react"
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"
+import L from "leaflet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -40,11 +42,54 @@ const DEV_ORG = {
   id: "00000000-0000-0000-0001-000000000001",
   name: "Guam Red Cross Emergency Shelter [SANDBOX]",
   description: "[SANDBOX] Red Cross emergency shelter and feeding — Typhoon Sinlaku.",
+  mailing_address: "P.O. Box 2950, Hagåtña, Guam 96932",
+  physical_address: "221 Chalan Santo Papa, Hagåtña, Guam 96910",
+  location_lat: 13.4745,
+  location_lng: 144.7504,
   contact_phone: "671-472-7234",
   contact_email: "sandbox@sinlaku.directory.gu",
   whatsapp: "+16714727234",
   service_types: ["shelter", "food"] as ServiceType[],
   islands: ["guam"] as Island[],
+}
+
+// ── Map pin picker ───────────────────────────────────────────────────────────
+
+const PIN_ICON = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+})
+
+const GUAM_CENTER: [number, number] = [13.4443, 144.7937]
+
+function ClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void }) {
+  useMapEvents({ click: (e) => onClick(e.latlng.lat, e.latlng.lng) })
+  return null
+}
+
+function LocationPicker({ lat, lng, onChange }: {
+  lat: number | null
+  lng: number | null
+  onChange: (lat: number, lng: number) => void
+}) {
+  const position = useMemo(
+    () => (lat != null && lng != null ? [lat, lng] as [number, number] : null),
+    [lat, lng],
+  )
+
+  return (
+    <MapContainer center={position ?? GUAM_CENTER} zoom={11} style={{ height: "100%", width: "100%" }} scrollWheelZoom>
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <ClickHandler onClick={onChange} />
+      {position && <Marker position={position} icon={PIN_ICON} />}
+    </MapContainer>
+  )
 }
 
 // ── Step 1: Auth (custom Clerk hooks) ────────────────────────────────────────
@@ -267,6 +312,10 @@ function AuthStep() {
 interface OrgFormData {
   name: string
   description: string
+  mailing_address: string
+  physical_address: string
+  location_lat: number | null
+  location_lng: number | null
   contact_phone: string
   contact_email: string
   whatsapp: string
@@ -285,6 +334,10 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
   const [form, setForm] = useState<OrgFormData>({
     name: DEV ? DEV_ORG.name : "",
     description: DEV ? DEV_ORG.description : "",
+    mailing_address: DEV ? DEV_ORG.mailing_address : "",
+    physical_address: DEV ? DEV_ORG.physical_address : "",
+    location_lat: DEV ? DEV_ORG.location_lat : null,
+    location_lng: DEV ? DEV_ORG.location_lng : null,
     contact_phone: DEV ? DEV_ORG.contact_phone : "",
     contact_email: DEV ? DEV_ORG.contact_email : "",
     whatsapp: DEV ? DEV_ORG.whatsapp : "",
@@ -320,6 +373,14 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
       setError("Organization name is required.")
       return
     }
+    if (!form.mailing_address.trim()) {
+      setError("Mailing address is required.")
+      return
+    }
+    if (!form.physical_address.trim()) {
+      setError("Physical address is required.")
+      return
+    }
     if (!form.contact_phone.trim()) {
       setError("Contact phone is required.")
       return
@@ -334,6 +395,10 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
           user_id: userId,
           name: form.name.trim(),
           description: form.description.trim() || null,
+          mailing_address: form.mailing_address.trim(),
+          physical_address: form.physical_address.trim(),
+          location_lat: form.location_lat,
+          location_lng: form.location_lng,
           contact_phone: form.contact_phone.trim(),
           contact_email: form.contact_email.trim() || null,
           whatsapp: form.whatsapp.trim() || null,
@@ -348,6 +413,10 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
           user_id: userId,
           name: form.name.trim(),
           description: form.description.trim() || null,
+          mailing_address: form.mailing_address.trim(),
+          physical_address: form.physical_address.trim(),
+          location_lat: form.location_lat,
+          location_lng: form.location_lng,
           contact_phone: form.contact_phone.trim(),
           contact_email: form.contact_email.trim() || null,
           whatsapp: form.whatsapp.trim() || null,
@@ -422,6 +491,54 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
           placeholder="Briefly describe your organization and the relief services you offer."
           rows={3}
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="org-mailing-address">
+          Mailing address <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="org-mailing-address"
+          type="text"
+          value={form.mailing_address}
+          onChange={(e) => setForm((p) => ({ ...p, mailing_address: e.target.value }))}
+          required
+          placeholder="P.O. Box 2950, Hagåtña, Guam 96932"
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="org-physical-address">
+          Physical address <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="org-physical-address"
+          type="text"
+          value={form.physical_address}
+          onChange={(e) => setForm((p) => ({ ...p, physical_address: e.target.value }))}
+          required
+          placeholder="221 Chalan Santo Papa, Hagåtña, Guam 96910"
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>
+          Pin your location on the map <span className="text-destructive">*</span>
+        </Label>
+        <p className="text-xs text-muted-foreground">Click the map to set your organization's location.</p>
+        <div className="rounded-md border border-border overflow-hidden" style={{ height: 260 }}>
+          <LocationPicker
+            lat={form.location_lat}
+            lng={form.location_lng}
+            onChange={(lat, lng) => setForm((p) => ({ ...p, location_lat: lat, location_lng: lng }))}
+          />
+        </div>
+        {form.location_lat != null && form.location_lng != null && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            {form.location_lat.toFixed(5)}, {form.location_lng.toFixed(5)}
+          </p>
+        )}
       </div>
 
       <div className="space-y-1.5">
