@@ -19,6 +19,7 @@ import InfoPage from "@/pages/InfoPage"
 import EmergencyContactsPage from "@/pages/EmergencyContactsPage"
 import NewsPage from "@/pages/NewsPage"
 import AnnouncementBanner from "@/components/AnnouncementBanner"
+import VolunteerStats from "@/components/VolunteerStats"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -30,6 +31,11 @@ const toasterProps = {
 function LandingPage() {
   return (
     <div className="min-h-[calc(100vh-88px)] bg-white flex flex-col items-center justify-center p-6">
+      {/* Announcement banner — above title */}
+      <div className="w-full max-w-md mb-4">
+        <AnnouncementBanner />
+      </div>
+
       <h1 className="text-3xl font-bold text-[#1E3A5F] mb-2 text-center">
         Mariana Islands Emergency Relief Directory
       </h1>
@@ -82,9 +88,9 @@ function LandingPage() {
         </Link>
       </div>
 
-      {/* Dynamic announcement banner */}
-      <div className="mt-4 w-full max-w-md">
-        <AnnouncementBanner />
+      {/* Volunteer stats — aggregate only, no PII */}
+      <div className="mt-4">
+        <VolunteerStats />
       </div>
 
       {/* Footer */}
