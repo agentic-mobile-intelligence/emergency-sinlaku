@@ -33,13 +33,14 @@ export default function ProviderDashboardPage() {
     if (!authLoading && !user) navigate("/provider/register")
   }, [authLoading, user, navigate])
 
+  const userId = user?.id
   useEffect(() => {
-    if (!user) return
+    if (!userId) return
     setOrgLoading(true)
     supabaseClient
       .from("organizations")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single()
       .then(({ data, error }) => {
         if (error) console.warn("org fetch:", error.message)
@@ -48,7 +49,7 @@ export default function ProviderDashboardPage() {
       })
       .catch(() => setOrgLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [userId])
 
   if (authLoading || orgLoading) {
     return (
