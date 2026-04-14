@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom"
 import { Home } from "lucide-react"
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react"
 
 export default function StickyHeader() {
   const location = useLocation()
@@ -20,7 +21,7 @@ export default function StickyHeader() {
           </Link>
         </div>
 
-        {/* Right: Sign up + Login */}
+        {/* Right: CTAs + auth */}
         <div className="flex items-center gap-2">
           <Link
             to="/request-aid"
@@ -28,18 +29,32 @@ export default function StickyHeader() {
           >
             Sign up as Recipient
           </Link>
-          <Link
-            to="/provider/register"
-            className="border border-white/50 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-white/10 transition"
-          >
-            Sign up as Provider
-          </Link>
-          <Link
-            to="/login"
-            className="text-white/80 px-2 py-1.5 text-xs hover:text-white hover:underline transition hidden sm:block"
-          >
-            Log in
-          </Link>
+
+          {/* Provider sign-up always goes to /provider/register (org form follows auth) */}
+          <SignedOut>
+            <Link
+              to="/provider/register"
+              className="border border-white/50 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-white/10 transition"
+            >
+              Sign up as Provider
+            </Link>
+            <SignInButton mode="modal">
+              <button className="text-white/80 px-2 py-1.5 text-xs hover:text-white hover:underline transition hidden sm:block">
+                Log in
+              </button>
+            </SignInButton>
+          </SignedOut>
+
+          <SignedIn>
+            <Link
+              to="/provider/dashboard"
+              className="border border-white/50 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-white/10 transition hidden sm:block"
+            >
+              Dashboard
+            </Link>
+            {/* UserButton shows avatar + sign-out menu */}
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </div>
       </div>
     </header>

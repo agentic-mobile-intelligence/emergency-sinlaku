@@ -1,14 +1,14 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
+import { useSignIn } from "@clerk/clerk-react"
 import { Loader2, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "@/hooks/useAuth"
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { signIn } = useAuth()
+  const { isLoaded, signIn, setActive } = useSignIn()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -17,13 +17,17 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isLoaded) return
     setError("")
     setLoading(true)
     try {
-      await signIn(email, password)
-      navigate("/provider/dashboard")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign in failed. Check your email and password.")
+      const result = await signIn.create({ identifier: email, password })
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId })
+        navigate("/provider/dashboard")
+      }
+    } catch (err: any) {
+      setError(err?.errors?.[0]?.longMessage ?? err?.errors?.[0]?.message ?? "Sign in failed. Check your email and password.")
     } finally {
       setLoading(false)
     }
@@ -34,9 +38,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center space-y-1">
           <h1 className="text-2xl font-bold tracking-tight text-[#1E3A5F]">Provider Sign In</h1>
-          <p className="text-sm text-gray-500">
-            Sign in to manage your relief offerings
-          </p>
+          <p className="text-sm text-gray-500">Sign in to manage your relief offerings</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -75,7 +77,7 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isLoaded}
             className="w-full text-white"
             style={{ backgroundColor: "#1E3A5F" }}
           >

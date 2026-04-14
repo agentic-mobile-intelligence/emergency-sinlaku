@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { AlertTriangle, Loader2, CheckCircle2, MessageCircle, FlaskConical } from "lucide-react"
+import { useSignUp, useSignIn, useUser } from "@clerk/clerk-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/useAuth"
-import { supabase } from "@/lib/supabase"
 import type { Enums } from "@/lib/database.types"
 
 type ServiceType = Enums<"service_type">
@@ -36,12 +36,6 @@ const ISLAND_OPTIONS: { value: Island; label: string }[] = [
 
 const DEV = import.meta.env.DEV
 
-const DEV_AUTH = {
-  email: "sandbox-provider@sinlaku.directory.gu",
-  password: "Sinlaku2026!",
-  displayName: "Sandbox Provider",
-}
-
 const DEV_ORG = {
   id: "00000000-0000-0000-0001-000000000001",
   name: "Guam Red Cross Emergency Shelter [SANDBOX]",
@@ -53,122 +47,213 @@ const DEV_ORG = {
   islands: ["guam"] as Island[],
 }
 
-// ── Step 1: Auth ──────────────────────────────────────────────────────────────
+// ── Step 1: Auth (custom Clerk hooks) ────────────────────────────────────────
 
-interface AuthStepProps {
-  onAuth: () => void
-  signUp: (email: string, password: string, displayName: string) => Promise<unknown>
-  signIn: (email: string, password: string) => Promise<unknown>
-}
-
-function AuthStep({ onAuth, signUp, signIn }: AuthStepProps) {
+function AuthStep() {
   const [mode, setMode] = useState<"signup" | "signin">("signup")
-  const [email, setEmail] = useState(DEV ? DEV_AUTH.email : "")
-  const [password, setPassword] = useState(DEV ? DEV_AUTH.password : "")
-  const [displayName, setDisplayName] = useState(DEV ? DEV_AUTH.displayName : "")
+  const [signupStage, setSignupStage] = useState<"form" | "verify">("form")
+
+  const { isLoaded: signUpLoaded, signUp, setActive: setSignUpActive } = useSignUp()
+  const { isLoaded: signInLoaded, signIn, setActive: setSignInActive } = useSignIn()
+
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [code, setCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const reset = () => {
+    setEmail("")
+    setPassword("")
+    setCode("")
+    setError("")
+    setLoading(false)
+    setSignupStage("form")
+  }
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!signUpLoaded) return
     setError("")
     setLoading(true)
     try {
-      if (mode === "signup") {
-        await signUp(email, password, displayName || email.split("@")[0])
-      } else {
-        await signIn(email, password)
-      }
-      onAuth()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong")
+      await signUp.create({ emailAddress: email, password })
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
+      setSignupStage("verify")
+    } catch (err: any) {
+      setError(err?.errors?.[0]?.longMessage ?? err?.errors?.[0]?.message ?? "Sign up failed.")
     } finally {
       setLoading(false)
     }
   }
 
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!signUpLoaded) return
+    setError("")
+    setLoading(true)
+    try {
+      const result = await signUp.attemptEmailAddressVerification({ code })
+      if (result.status === "complete") {
+        await setSignUpActive({ session: result.createdSessionId })
+        // parent useEffect watches useUser and advances to org step
+      }
+    } catch (err: any) {
+      setError(err?.errors?.[0]?.longMessage ?? err?.errors?.[0]?.message ?? "Verification failed.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!signInLoaded) return
+    setError("")
+    setLoading(true)
+    try {
+      const result = await signIn.create({ identifier: email, password })
+      if (result.status === "complete") {
+        await setSignInActive({ session: result.createdSessionId })
+      }
+    } catch (err: any) {
+      setError(err?.errors?.[0]?.longMessage ?? err?.errors?.[0]?.message ?? "Sign in failed.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const switchMode = () => {
+    reset()
+    setMode(mode === "signup" ? "signin" : "signup")
+  }
+
   return (
     <div className="space-y-6">
-      {DEV && (
-        <div data-testid="dev-sandbox-banner" className="flex items-center gap-2 rounded-md bg-violet-50 border border-violet-200 px-3 py-2 text-xs text-violet-700 font-medium">
-          <FlaskConical className="w-3.5 h-3.5 shrink-0" />
-          DEV — Sandbox credentials loaded
-        </div>
-      )}
-
       <div>
         <h2 className="text-xl font-bold" style={{ color: "#1E3A5F" }}>
-          {mode === "signup" ? "Create your provider account" : "Sign in to your account"}
+          {mode === "signup"
+            ? signupStage === "verify" ? "Check your email" : "Create your provider account"
+            : "Sign in to your account"}
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
           {mode === "signup"
-            ? "First, create an account. Then you'll fill in your organization details."
+            ? signupStage === "verify"
+              ? `We sent a verification code to ${email}. Enter it below.`
+              : "First, create an account. Then you'll fill in your organization details."
             : "Sign in to continue with your provider registration."}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {mode === "signup" && (
+      {mode === "signup" && signupStage === "form" && (
+        <form onSubmit={handleSignUp} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="displayName">Your name</Label>
+            <Label htmlFor="su-email">Email</Label>
             <Input
-              id="displayName"
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Jane Doe"
+              id="su-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
             />
           </div>
-        )}
-
-        <div className="space-y-1.5">
-          <Label htmlFor="auth-email">Email</Label>
-          <Input
-            id="auth-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            placeholder="you@example.com"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="auth-password">Password</Label>
-          <Input
-            id="auth-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            placeholder={mode === "signup" ? "Min 6 characters" : "Your password"}
-          />
-        </div>
-
-        {error && (
-          <p className="text-sm text-destructive">{error}</p>
-        )}
-
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full text-white"
-          style={{ backgroundColor: "#1E3A5F" }}
-        >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : mode === "signup" ? (
-            "Create Account & Continue"
-          ) : (
-            "Sign In & Continue"
+          <div className="space-y-1.5">
+            <Label htmlFor="su-password">Password</Label>
+            <Input
+              id="su-password"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              minLength={8}
+            />
+          </div>
+          {error && (
+            <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
           )}
-        </Button>
-      </form>
+          <Button type="submit" disabled={loading || !signUpLoaded} className="w-full text-white" style={{ backgroundColor: "#1E3A5F" }}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Account"}
+          </Button>
+        </form>
+      )}
+
+      {mode === "signup" && signupStage === "verify" && (
+        <form onSubmit={handleVerify} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="verify-code">Verification code</Label>
+            <Input
+              id="verify-code"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="123456"
+              required
+            />
+          </div>
+          {error && (
+            <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+          <Button type="submit" disabled={loading || !signUpLoaded} className="w-full text-white" style={{ backgroundColor: "#1E3A5F" }}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify Email"}
+          </Button>
+          <button type="button" onClick={() => setSignupStage("form")} className="text-sm text-muted-foreground hover:underline w-full text-center">
+            Back
+          </button>
+        </form>
+      )}
+
+      {mode === "signin" && (
+        <form onSubmit={handleSignIn} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="si-email">Email</Label>
+            <Input
+              id="si-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="si-password">Password</Label>
+            <Input
+              id="si-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          {error && (
+            <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+          <Button type="submit" disabled={loading || !signInLoaded} className="w-full text-white" style={{ backgroundColor: "#1E3A5F" }}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+          </Button>
+        </form>
+      )}
 
       <button
         type="button"
-        onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError("") }}
+        onClick={switchMode}
         className="text-sm text-muted-foreground hover:underline w-full text-center"
       >
         {mode === "signup" ? "Already have an account? Sign in" : "Need an account? Sign up"}
@@ -196,6 +281,7 @@ interface OrgStepProps {
 }
 
 function OrgStep({ userId, onDone, onError }: OrgStepProps) {
+  const { supabaseClient } = useAuth()
   const [form, setForm] = useState<OrgFormData>({
     name: DEV ? DEV_ORG.name : "",
     description: DEV ? DEV_ORG.description : "",
@@ -242,8 +328,8 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
     setLoading(true)
     try {
       if (DEV) {
-        // Dev: upsert with fixed UUID — idempotent, safe to repeat
-        const { error: orgError } = await supabase.from("organizations").upsert({
+        // Dev: upsert with fixed id — idempotent, safe to repeat
+        const { error: orgError } = await supabaseClient.from("organizations").upsert({
           id: DEV_ORG.id,
           user_id: userId,
           name: form.name.trim(),
@@ -258,8 +344,7 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
         }, { onConflict: "id" })
         if (orgError) throw orgError
       } else {
-        // Prod: normal insert — one-time, permanent
-        const { error: orgError } = await supabase.from("organizations").insert({
+        const { error: orgError } = await supabaseClient.from("organizations").insert({
           user_id: userId,
           name: form.name.trim(),
           description: form.description.trim() || null,
@@ -274,13 +359,15 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
         if (orgError) throw orgError
       }
 
-      // Update profile role to 'provider'
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ role: "provider" })
-        .eq("id", userId)
-
-      if (profileError) throw profileError
+      // Upsert profile with Clerk user ID as the identifier.
+      // clerk_user_id and role columns are added by migration 20260413190000.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabaseClient.from("profiles") as any).upsert({
+        id: crypto.randomUUID(),
+        clerk_user_id: userId,
+        display_name: "Provider",
+        role: "provider",
+      }, { onConflict: "clerk_user_id" })
 
       toast.success("Registration submitted! Welcome to the network.")
       onDone()
@@ -452,20 +539,18 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
 
 export default function ProviderRegisterPage() {
   const navigate = useNavigate()
-  const { user, loading: authLoading, signUp, signIn } = useAuth()
+  const { user, isLoaded } = useUser()
   const [step, setStep] = useState<"auth" | "org" | "done">("auth")
 
+  // Advance to org step once Clerk reports user is signed in
   useEffect(() => {
-    if (!authLoading) {
-      if (user) {
-        setStep("org")
-      } else {
-        setStep("auth")
-      }
+    if (!isLoaded) return
+    if (user) {
+      setStep((prev) => prev === "auth" ? "org" : prev)
+    } else {
+      setStep("auth")
     }
-  }, [authLoading, user])
-
-  const handleAuthDone = () => setStep("org")
+  }, [isLoaded, user])
 
   const handleOrgDone = () => {
     setStep("done")
@@ -530,12 +615,12 @@ export default function ProviderRegisterPage() {
           )}
 
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            {authLoading ? (
+            {!isLoaded ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : step === "auth" ? (
-              <AuthStep onAuth={handleAuthDone} signUp={signUp} signIn={signIn} />
+              <AuthStep />
             ) : step === "org" && user ? (
               <OrgStep userId={user.id} onDone={handleOrgDone} onError={handleOrgError} />
             ) : null}

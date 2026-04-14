@@ -1,116 +1,67 @@
-import { useEffect, useState, useCallback } from "react"
-import type { User } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase"
-import type { Tables } from "@/lib/database.types"
+/**
+ * useAuth — Clerk-based auth hook
+ *
+ * Provides a consistent interface for the rest of the app while
+ * delegating to Clerk for session management.
+ *
+ * The returned `supabaseClient` is pre-configured to attach the Clerk
+ * JWT (from the "supabase" JWT template) to every request, so Supabase
+ * RLS policies using auth.jwt()->>'sub' work correctly.
+ *
+ * Setup required in Clerk Dashboard:
+ *   JWT Templates → New template → Name: "supabase"
+ *   Signing algorithm: HS256
+ *   Signing key: paste Supabase project JWT secret
+ *   Claims: { "sub": "{{user.id}}" }
+ */
 
-type Profile = Tables<"profiles">
-
-interface AuthState {
-  user: User | null
-  profile: Profile | null
-  loading: boolean
-}
+import { useMemo } from "react"
+import { useUser, useClerk, useSession } from "@clerk/clerk-react"
+import { createAuthClient } from "@/lib/supabase"
 
 export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    profile: null,
-    loading: true,
-  })
+  const { user, isLoaded } = useUser()
+  const { signOut } = useClerk()
+  const { session } = useSession()
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single()
-    return data
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-
-    // Timeout: if auth check takes > 4s, show auth page
-    const timeout = setTimeout(() => {
-      if (!cancelled) {
-        setState((prev) => prev.loading ? { user: null, profile: null, loading: false } : prev)
-      }
-    }, 4000)
-
-    const resolveUser = async (user: User | null) => {
-      if (cancelled) return
-      if (user) {
-        try {
-          const profile = await fetchProfile(user.id)
-          if (!cancelled) setState({ user, profile, loading: false })
-        } catch {
-          if (!cancelled) setState({ user, profile: null, loading: false })
-        }
-      } else {
-        if (!cancelled) setState({ user: null, profile: null, loading: false })
-      }
-    }
-
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => resolveUser(session?.user ?? null))
-      .catch(() => {
-        if (!cancelled) setState({ user: null, profile: null, loading: false })
-      })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        resolveUser(session?.user ?? null)
-      }
-    )
-
-    return () => {
-      cancelled = true
-      clearTimeout(timeout)
-      subscription.unsubscribe()
-    }
-  }, [fetchProfile])
-
-  const signUp = async (email: string, password: string, displayName: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { display_name: displayName } },
-    })
-    if (error) throw error
-    return data
-  }
-
-  const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    if (error) throw error
-    return data
-  }
-
-  const signOut = async () => {
-    await supabase.auth.signOut()
-  }
-
-  const updateProfile = async (updates: Partial<Pick<Profile, "display_name" | "avatar_url">>) => {
-    if (!state.user) return
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", state.user.id)
-      .select()
-      .single()
-    if (error) throw error
-    setState((prev) => ({ ...prev, profile: data }))
-    return data
-  }
+  const supabaseClient = useMemo(
+    () =>
+      createAuthClient(async () => {
+        if (!session) return null
+        return session.getToken({ template: "supabase" })
+      }),
+    [session]
+  )
 
   return {
-    ...state,
-    signUp,
-    signIn,
+    // Normalised user shape — rest of app uses user.id and user.email
+    user: user
+      ? {
+          id: user.id,
+          email: user.primaryEmailAddress?.emailAddress ?? "",
+        }
+      : null,
+
+    // Profile-like object built from Clerk user data
+    profile: user
+      ? {
+          id: user.id,
+          clerk_user_id: user.id,
+          display_name:
+            user.fullName ??
+            user.firstName ??
+            user.primaryEmailAddress?.emailAddress ??
+            "",
+          avatar_url: user.imageUrl ?? null,
+          created_at: user.createdAt?.toISOString() ?? "",
+          role: "provider" as const,
+        }
+      : null,
+
+    loading: !isLoaded,
     signOut,
-    updateProfile,
+
+    // Supabase client with Clerk JWT injected — use this for all authenticated writes
+    supabaseClient,
   }
 }

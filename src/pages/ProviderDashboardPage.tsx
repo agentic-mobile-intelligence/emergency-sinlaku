@@ -5,7 +5,6 @@ import {
   CheckCircle, MessageCircle, Building2,
 } from "lucide-react"
 import { toast } from "sonner"
-import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -93,7 +92,7 @@ const defaultOfferingForm: OfferingForm = {
 }
 
 export default function ProviderDashboardPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, supabaseClient } = useAuth()
   const navigate = useNavigate()
 
   const [org, setOrg] = useState<Organization | null>(null)
@@ -120,13 +119,13 @@ export default function ProviderDashboardPage() {
   const [verificationSaving, setVerificationSaving] = useState(false)
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/login")
+    if (!authLoading && !user) navigate("/provider/register")
   }, [authLoading, user, navigate])
 
   useEffect(() => {
     if (!user) return
     setOrgLoading(true)
-    supabase
+    supabaseClient
       .from("organizations")
       .select("*")
       .eq("user_id", user.id)
@@ -140,7 +139,7 @@ export default function ProviderDashboardPage() {
   useEffect(() => {
     if (!org) { setOfferingsLoading(false); return }
     setOfferingsLoading(true)
-    supabase
+    supabaseClient
       .from("offerings")
       .select("*")
       .eq("organization_id", org.id)
@@ -153,7 +152,7 @@ export default function ProviderDashboardPage() {
 
   useEffect(() => {
     setRequestsLoading(true)
-    supabase
+    supabaseClient
       .from("aid_requests")
       .select("*")
       .order("created_at", { ascending: false })
@@ -178,7 +177,7 @@ export default function ProviderDashboardPage() {
   const saveOrg = async () => {
     if (!org) return
     setOrgSaving(true)
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("organizations")
       .update({
         name: orgForm.name,
@@ -203,7 +202,7 @@ export default function ProviderDashboardPage() {
   const toggleVerification = async () => {
     if (!org) return
     setVerificationSaving(true)
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("organizations")
       .update({ verification_requested: !org.verification_requested })
       .eq("id", org.id)
@@ -251,7 +250,7 @@ export default function ProviderDashboardPage() {
       organization_id: org.id,
     }
     if (offeringDialog.mode === "add") {
-      const { data, error } = await supabase.from("offerings").insert(payload).select().single()
+      const { data, error } = await supabaseClient.from("offerings").insert(payload).select().single()
       if (error) {
         toast.error("Failed to add: " + error.message)
       } else {
@@ -260,7 +259,7 @@ export default function ProviderDashboardPage() {
         toast.success("Offering added")
       }
     } else if (offeringDialog.offering) {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from("offerings")
         .update(payload)
         .eq("id", offeringDialog.offering.id)
@@ -278,7 +277,7 @@ export default function ProviderDashboardPage() {
   }
 
   const deleteOffering = async (id: string) => {
-    const { error } = await supabase.from("offerings").delete().eq("id", id)
+    const { error } = await supabaseClient.from("offerings").delete().eq("id", id)
     if (error) {
       toast.error("Failed to delete: " + error.message)
     } else {
@@ -289,7 +288,7 @@ export default function ProviderDashboardPage() {
   }
 
   const updateRequestStatus = async (requestId: string, newStatus: AidRequest["status"]) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("aid_requests")
       .update({ status: newStatus, responded_by: org?.id ?? null })
       .eq("id", requestId)

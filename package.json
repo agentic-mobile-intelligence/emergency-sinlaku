@@ -16,6 +16,7 @@
     "test:island:headed": "bunx playwright test tests/island-page.spec.ts --headed --project='Desktop Chrome'"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.3",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
