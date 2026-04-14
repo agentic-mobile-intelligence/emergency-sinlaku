@@ -98,7 +98,7 @@ export default function StickyHeader() {
                 to="/provider/dashboard"
                 className="border border-white/50 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-white/10 transition hidden sm:block"
               >
-                Dashboard
+                Organization
               </Link>
             )}
             <UserButton afterSignOutUrl="/" />

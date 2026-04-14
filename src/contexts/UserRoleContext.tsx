@@ -42,6 +42,7 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
     const displayName =
       user.fullName ?? user.firstName ?? email ?? "User"
 
+    // 1. Try to upsert profile (may fail if JWT not ready — that's OK)
     client
       .from("profiles")
       .upsert(
@@ -54,10 +55,21 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
         },
         { onConflict: "clerk_user_id" },
       )
+      .then(() => {})
+      .catch(() => {})
+
+    // 2. Read role separately (SELECT policy is public — always works)
+    client
+      .from("profiles")
       .select("role")
+      .eq("clerk_user_id", user.id)
       .single()
-      .then(({ data, error }) => {
-        setRole(error ? "unverified" : (data?.role ?? "unverified"))
+      .then(({ data }) => {
+        setRole(data?.role ?? "unverified")
+        setRoleLoading(false)
+      })
+      .catch(() => {
+        setRole("unverified")
         setRoleLoading(false)
       })
   }, [user?.id, isLoaded])
