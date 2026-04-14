@@ -16,6 +16,9 @@ import VolunteerPage from "@/pages/VolunteerPage"
 import VolunteerSheetsPage from "@/pages/VolunteerSheetsPage"
 import VolunteerLeaderPage from "@/pages/VolunteerLeaderPage"
 import InfoPage from "@/pages/InfoPage"
+import EmergencyContactsPage from "@/pages/EmergencyContactsPage"
+import NewsPage from "@/pages/NewsPage"
+import AnnouncementBanner from "@/components/AnnouncementBanner"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -63,23 +66,25 @@ function LandingPage() {
         </div>
       </div>
 
-      {/* FEMA Declaration Banner */}
-      <div className="mt-6 w-full max-w-md rounded-xl border border-[#1E3A5F]/20 bg-[#1E3A5F]/5 p-4">
-        <p className="text-xs font-semibold text-[#1E3A5F] mb-1">FEMA Emergency Declaration Approved</p>
-        <p className="text-xs text-gray-600 mb-3">
-          Federal disaster relief activated — 75% federal funding for emergency protective measures.
-        </p>
+      {/* Emergency contacts + FEMA info */}
+      <div className="mt-6 w-full max-w-md flex gap-2">
+        <Link
+          to="/emergency-contacts"
+          className="flex-1 bg-[#DC2626] text-white text-sm font-semibold rounded-lg py-2.5 text-center hover:bg-red-700 transition"
+        >
+          📞 Emergency Contacts
+        </Link>
         <Link
           to="/info"
-          className="block bg-[#1E3A5F] text-white text-sm font-semibold rounded-lg py-2.5 text-center hover:bg-[#2a4f7a] transition"
+          className="flex-1 bg-[#1E3A5F] text-white text-sm font-semibold rounded-lg py-2.5 text-center hover:bg-[#2a4f7a] transition"
         >
-          View Emergency Info & Updates
+          ℹ️ Emergency Info
         </Link>
       </div>
 
-      <div className="mt-4 text-center text-sm text-gray-500 space-y-1">
-        <p><a href="tel:911" className="text-[#DC2626] font-bold">911</a> Emergency &nbsp;|&nbsp; <a href="tel:311" className="text-[#1E3A5F] font-bold">311</a> Non-Emergency</p>
-        <p>FEMA: <a href="tel:18006213362" className="text-[#1E3A5F] font-bold">1-800-621-3362</a></p>
+      {/* Dynamic announcement banner */}
+      <div className="mt-4 w-full max-w-md">
+        <AnnouncementBanner />
       </div>
 
       {/* Footer */}
@@ -128,6 +133,8 @@ function App() {
           <Route path="/volunteer/sheets" element={<VolunteerSheetsPage />} />
           <Route path="/volunteer-leader" element={<VolunteerLeaderPage />} />
           <Route path="/info" element={<InfoPage />} />
+          <Route path="/emergency-contacts" element={<EmergencyContactsPage />} />
+          <Route path="/news" element={<NewsPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />

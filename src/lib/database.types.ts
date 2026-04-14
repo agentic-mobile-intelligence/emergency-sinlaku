@@ -82,6 +82,117 @@ export type Database = {
           },
         ]
       }
+      announcements: {
+        Row: {
+          action_label: string | null
+          action_url: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          message: string
+          priority: number
+          updated_at: string
+        }
+        Insert: {
+          action_label?: string | null
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message: string
+          priority?: number
+          updated_at?: string
+        }
+        Update: {
+          action_label?: string | null
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          priority?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_updates: {
+        Row: {
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          island: Database["public"]["Enums"]["island"]
+          source_url: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          author_name: string
+          body: string
+          created_at?: string
+          id?: string
+          island: Database["public"]["Enums"]["island"]
+          source_url?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          author_name?: string
+          body?: string
+          created_at?: string
+          id?: string
+          island?: Database["public"]["Enums"]["island"]
+          source_url?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      news_articles: {
+        Row: {
+          author_name: string | null
+          body: string | null
+          category: string
+          created_at: string
+          featured: boolean
+          id: string
+          image_url: string | null
+          published_at: string | null
+          source_url: string
+          status: string
+          summary: string | null
+          title: string
+        }
+        Insert: {
+          author_name?: string | null
+          body?: string | null
+          category?: string
+          created_at?: string
+          featured?: boolean
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          source_url: string
+          status?: string
+          summary?: string | null
+          title: string
+        }
+        Update: {
+          author_name?: string | null
+          body?: string | null
+          category?: string
+          created_at?: string
+          featured?: boolean
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          source_url?: string
+          status?: string
+          summary?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       offerings: {
         Row: {
           capacity_text: string | null
@@ -213,6 +324,7 @@ export type Database = {
           clerk_user_id: string | null
           created_at: string
           display_name: string
+          email: string | null
           id: string
           role: string
         }
@@ -221,6 +333,7 @@ export type Database = {
           clerk_user_id?: string | null
           created_at?: string
           display_name: string
+          email?: string | null
           id: string
           role?: string
         }
@@ -229,6 +342,7 @@ export type Database = {
           clerk_user_id?: string | null
           created_at?: string
           display_name?: string
+          email?: string | null
           id?: string
           role?: string
         }
@@ -412,7 +526,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       accessible_status: "yes" | "no" | "unsure"

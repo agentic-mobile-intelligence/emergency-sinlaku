@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom"
+
 export default function EmergencyBanner() {
   return (
     <div
@@ -14,6 +16,9 @@ export default function EmergencyBanner() {
         <a href="tel:1-800-621-3362" className="underline hover:opacity-80">
           FEMA 1-800-621-3362
         </a>
+        <Link to="/news" className="underline hover:opacity-80">
+          News
+        </Link>
       </div>
     </div>
   );

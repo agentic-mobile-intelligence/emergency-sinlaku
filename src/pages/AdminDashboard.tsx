@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
   AlertTriangle, CheckCircle2, Clock, ShieldCheck, ShieldOff,
-  Inbox, Users, Loader2, RefreshCw,
+  Inbox, Loader2, Megaphone, Trash2, Home,
 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -421,6 +425,398 @@ function UsersTab() {
   )
 }
 
+// ── Announcements tab ─────────────────────────────────────────────────────────
+
+function AnnouncementsTab() {
+  const { supabaseClient } = useAuth()
+  const [saving, setSaving] = useState(false)
+  const [toggling, setToggling] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [form, setForm] = useState({ message: "", action_label: "", action_url: "", priority: "0" })
+
+  const { data: announcements, isLoading, refetch } = useQuery({
+    queryKey: ["admin", "announcements"],
+    queryFn: async () => {
+      const { data, error } = await supabaseClient
+        .from("announcements")
+        .select("*")
+        .order("priority", { ascending: false })
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return data
+    },
+  })
+
+  async function create() {
+    if (!form.message.trim()) return toast.error("Message is required.")
+    setSaving(true)
+    const { error } = await supabaseClient.from("announcements").insert({
+      message: form.message.trim(),
+      action_label: form.action_label.trim() || null,
+      action_url: form.action_url.trim() || null,
+      priority: parseInt(form.priority) || 0,
+      is_active: true,
+    })
+    if (error) toast.error("Failed: " + error.message)
+    else {
+      toast.success("Announcement created.")
+      setForm({ message: "", action_label: "", action_url: "", priority: "0" })
+      refetch()
+    }
+    setSaving(false)
+  }
+
+  async function toggleActive(id: string, current: boolean) {
+    setToggling(id)
+    const { error } = await supabaseClient
+      .from("announcements")
+      .update({ is_active: !current })
+      .eq("id", id)
+    if (error) toast.error("Update failed.")
+    else refetch()
+    setToggling(null)
+  }
+
+  async function remove(id: string) {
+    setDeleting(id)
+    const { error } = await supabaseClient.from("announcements").delete().eq("id", id)
+    if (error) toast.error("Delete failed.")
+    else { toast.success("Deleted."); refetch() }
+    setDeleting(null)
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Create form */}
+      <section>
+        <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
+          <Megaphone className="h-4 w-4" /> New Announcement
+        </h2>
+        <Card className="border border-border">
+          <CardContent className="pt-5 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="ann-message">Message <span className="text-destructive">*</span></Label>
+              <Textarea
+                id="ann-message"
+                value={form.message}
+                onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
+                placeholder="FEMA Declaration approved — federal relief activated."
+                className="min-h-[72px]"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="ann-label">Button label <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                <Input
+                  id="ann-label"
+                  value={form.action_label}
+                  onChange={(e) => setForm((p) => ({ ...p, action_label: e.target.value }))}
+                  placeholder="Learn more"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ann-url">Button URL <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                <Input
+                  id="ann-url"
+                  value={form.action_url}
+                  onChange={(e) => setForm((p) => ({ ...p, action_url: e.target.value }))}
+                  placeholder="/info or https://…"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5 w-28">
+              <Label htmlFor="ann-priority">Priority <span className="text-xs text-muted-foreground">(higher = first)</span></Label>
+              <Input
+                id="ann-priority"
+                type="number"
+                value={form.priority}
+                onChange={(e) => setForm((p) => ({ ...p, priority: e.target.value }))}
+              />
+            </div>
+            <Button
+              onClick={create}
+              disabled={saving}
+              className="bg-[#1E3A5F] w-full sm:w-auto"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {saving ? "Saving…" : "Post Announcement"}
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* List */}
+      <section>
+        <h2 className="text-base font-semibold mb-3">All Announcements</h2>
+        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {!isLoading && (announcements?.length ?? 0) === 0 && (
+          <p className="text-sm text-muted-foreground">No announcements yet.</p>
+        )}
+        <div className="space-y-2">
+          {announcements?.map((a) => (
+            <Card key={a.id} className={`border ${a.is_active ? "border-[#1E3A5F]/30 bg-[#1E3A5F]/5" : "border-border opacity-60"}`}>
+              <CardContent className="px-4 py-3 space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-medium leading-snug">{a.message}</p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-muted-foreground">P{a.priority}</span>
+                    <Switch
+                      checked={a.is_active}
+                      disabled={toggling === a.id}
+                      onCheckedChange={() => toggleActive(a.id, a.is_active)}
+                    />
+                    <button
+                      onClick={() => remove(a.id)}
+                      disabled={deleting === a.id}
+                      className="text-muted-foreground hover:text-destructive transition"
+                    >
+                      {deleting === a.id
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <Trash2 className="h-4 w-4" />
+                      }
+                    </button>
+                  </div>
+                </div>
+                {a.action_label && a.action_url && (
+                  <p className="text-xs text-muted-foreground">
+                    Button: <span className="font-medium">{a.action_label}</span> → {a.action_url}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  {a.is_active ? "Active" : "Inactive"} · {new Date(a.created_at).toLocaleDateString()}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+// ── News tab ─────────────────────────────────────────────────────────────────
+
+function NewsTab() {
+  const { supabaseClient } = useAuth()
+  const [saving, setSaving] = useState(false)
+  const [toggling, setToggling] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [form, setForm] = useState({
+    source_url: "",
+    title: "",
+    summary: "",
+    category: "federal",
+    featured: false,
+  })
+
+  const { data: articles, isLoading, refetch } = useQuery({
+    queryKey: ["admin", "news_articles"],
+    queryFn: async () => {
+      // Admin needs to see all articles, not just published
+      const { data, error } = await supabaseClient
+        .from("news_articles")
+        .select("*")
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return data as any[]
+    },
+  })
+
+  async function addArticle() {
+    if (!form.source_url.trim()) return toast.error("Source URL is required.")
+    if (!form.title.trim()) return toast.error("Title is required.")
+    setSaving(true)
+    const { error } = await supabaseClient.from("news_articles").insert({
+      source_url: form.source_url.trim(),
+      title: form.title.trim(),
+      summary: form.summary.trim() || null,
+      category: form.category,
+      featured: form.featured,
+      status: "published",
+      published_at: new Date().toISOString(),
+    })
+    if (error) toast.error("Failed: " + error.message)
+    else {
+      toast.success("News article added.")
+      setForm({ source_url: "", title: "", summary: "", category: "federal", featured: false })
+      refetch()
+    }
+    setSaving(false)
+  }
+
+  async function toggleStatus(id: string, current: string) {
+    setToggling(id)
+    const next = current === "published" ? "draft" : "published"
+    const { error } = await supabaseClient
+      .from("news_articles")
+      .update({
+        status: next,
+        published_at: next === "published" ? new Date().toISOString() : null,
+      })
+      .eq("id", id)
+    if (error) toast.error("Update failed.")
+    else refetch()
+    setToggling(null)
+  }
+
+  async function toggleFeatured(id: string, current: boolean) {
+    setToggling(id)
+    // Unfeatured all first if setting featured
+    if (!current) {
+      await supabaseClient.from("news_articles").update({ featured: false }).eq("featured", true)
+    }
+    const { error } = await supabaseClient.from("news_articles").update({ featured: !current }).eq("id", id)
+    if (error) toast.error("Update failed.")
+    else refetch()
+    setToggling(null)
+  }
+
+  async function remove(id: string) {
+    setDeleting(id)
+    const { error } = await supabaseClient.from("news_articles").delete().eq("id", id)
+    if (error) toast.error("Delete failed.")
+    else { toast.success("Deleted."); refetch() }
+    setDeleting(null)
+  }
+
+  const CATEGORY_OPTIONS = [
+    { value: "federal", label: "Federal" },
+    { value: "local", label: "Local" },
+    { value: "community", label: "Community" },
+    { value: "weather", label: "Weather" },
+  ]
+
+  return (
+    <div className="space-y-8">
+      <section>
+        <h2 className="text-base font-semibold mb-3">Add News Article</h2>
+        <Card className="border border-border">
+          <CardContent className="pt-5 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="news-url">Source URL <span className="text-destructive">*</span></Label>
+              <Input
+                id="news-url"
+                type="url"
+                value={form.source_url}
+                onChange={(e) => setForm((p) => ({ ...p, source_url: e.target.value }))}
+                placeholder="https://www.fema.gov/press-release/..."
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="news-title">Title <span className="text-destructive">*</span></Label>
+              <Input
+                id="news-title"
+                value={form.title}
+                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                placeholder="Emergency Declaration Approved for Guam"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="news-summary">Summary <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <Textarea
+                id="news-summary"
+                value={form.summary}
+                onChange={(e) => setForm((p) => ({ ...p, summary: e.target.value }))}
+                placeholder="Brief summary of the article..."
+                className="min-h-[60px]"
+              />
+            </div>
+            <div className="flex gap-4 items-end">
+              <div className="space-y-1.5">
+                <Label>Category</Label>
+                <Select value={form.category} onValueChange={(v) => setForm((p) => ({ ...p, category: v }))}>
+                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer pb-2">
+                <input
+                  type="checkbox"
+                  checked={form.featured}
+                  onChange={(e) => setForm((p) => ({ ...p, featured: e.target.checked }))}
+                  className="rounded"
+                />
+                <span className="text-sm font-medium">Featured</span>
+              </label>
+            </div>
+            <Button
+              onClick={addArticle}
+              disabled={saving}
+              className="bg-[#1E3A5F] w-full sm:w-auto"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {saving ? "Saving…" : "Publish Article"}
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section>
+        <h2 className="text-base font-semibold mb-3">All Articles ({isLoading ? "…" : articles?.length ?? 0})</h2>
+        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {!isLoading && (articles?.length ?? 0) === 0 && (
+          <p className="text-sm text-muted-foreground">No articles yet.</p>
+        )}
+        <div className="space-y-2">
+          {articles?.map((a: any) => (
+            <Card key={a.id} className={`border ${a.status === "published" ? "border-border" : "border-border opacity-60"} ${a.featured ? "border-[#1E3A5F]/40 bg-[#1E3A5F]/5" : ""}`}>
+              <CardContent className="px-4 py-3 space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      {a.featured && <Badge className="text-xs bg-[#1E3A5F]">Featured</Badge>}
+                      <Badge variant="outline" className="text-xs">{a.category}</Badge>
+                      <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
+                        {a.status}
+                      </Badge>
+                    </div>
+                    <p className="font-medium text-sm">{a.title}</p>
+                    {a.summary && <p className="text-xs text-muted-foreground">{a.summary}</p>}
+                    <a href={a.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#1E3A5F] hover:underline">
+                      {a.source_url}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      disabled={toggling === a.id}
+                      onClick={() => toggleFeatured(a.id, a.featured)}
+                    >
+                      {a.featured ? "Unfeature" : "Feature"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      disabled={toggling === a.id}
+                      onClick={() => toggleStatus(a.id, a.status)}
+                    >
+                      {a.status === "published" ? "Unpublish" : "Publish"}
+                    </Button>
+                    <button
+                      onClick={() => remove(a.id)}
+                      disabled={deleting === a.id}
+                      className="text-muted-foreground hover:text-destructive transition"
+                    >
+                      {deleting === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
 // ── Root component ────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
@@ -450,27 +846,39 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-destructive/90 backdrop-blur-sm border-b border-destructive/50 px-4 py-2">
-        <div className="max-w-5xl mx-auto flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-destructive-foreground" />
-          <span className="text-sm font-bold text-destructive-foreground uppercase tracking-wide">
-            Typhoon Sinlaku — Admin Dashboard
-          </span>
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive-foreground" />
+            <span className="text-sm font-bold text-destructive-foreground uppercase tracking-wide">
+              Typhoon Sinlaku — Admin Dashboard
+            </span>
+          </div>
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 bg-[#1E3A5F] text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-[#2a4f7a] transition"
+          >
+            <Home className="h-3.5 w-3.5" /> Home
+          </Link>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8">
         <Tabs defaultValue="overview">
-          <TabsList className="mb-6 grid grid-cols-4 w-full max-w-lg">
+          <TabsList className="mb-6 grid grid-cols-6 w-full max-w-2xl">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="organizations">Orgs</TabsTrigger>
             <TabsTrigger value="volunteers">Volunteers</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="news">News</TabsTrigger>
+            <TabsTrigger value="announcements">Alerts</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview"><OverviewTab /></TabsContent>
           <TabsContent value="organizations"><OrgsTab /></TabsContent>
           <TabsContent value="volunteers"><VolunteersTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
+          <TabsContent value="news"><NewsTab /></TabsContent>
+          <TabsContent value="announcements"><AnnouncementsTab /></TabsContent>
         </Tabs>
       </main>
     </div>
