@@ -44,6 +44,12 @@ const SKILL_LABELS: Record<string, string> = {
   childcare: "Childcare", translation: "Translation",
   general_labor: "General Labor", other: "Other",
 }
+const AVAILABILITY_LABELS: Record<string, string> = {
+  weekday_mornings: "Wkdy AM", weekday_afternoons: "Wkdy PM",
+  weekday_evenings: "Wkdy Eve", weekend_mornings: "Wknd AM",
+  weekend_afternoons: "Wknd PM", weekend_evenings: "Wknd Eve",
+  anytime: "Anytime",
+}
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
   provider: "Provider",
@@ -304,6 +310,18 @@ function VolunteersTab() {
                     </div>
                   </div>
                   <SkillChips skills={s.skills ?? []} />
+                  {(s.availability ?? []).length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {(s.availability as string[]).map((a) => (
+                        <span key={a} className="rounded-full bg-gray-100 text-gray-600 text-xs px-2 py-0.5">
+                          {AVAILABILITY_LABELS[a] ?? a}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {s.contact && (
+                    <p className="text-xs text-muted-foreground font-medium">📞 {s.contact}</p>
+                  )}
                   {s.notes && <p className="text-xs text-muted-foreground">{s.notes}</p>}
                 </CardContent>
               </Card>
@@ -334,6 +352,18 @@ function VolunteersTab() {
                     </div>
                   </div>
                   <SkillChips skills={l.skills ?? []} />
+                  {(l.availability ?? []).length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {(l.availability as string[]).map((a) => (
+                        <span key={a} className="rounded-full bg-gray-100 text-gray-600 text-xs px-2 py-0.5">
+                          {AVAILABILITY_LABELS[a] ?? a}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {l.contact && (
+                    <p className="text-xs text-muted-foreground font-medium">📞 {l.contact}</p>
+                  )}
                   {l.experience && <p className="text-xs text-muted-foreground italic">"{l.experience}"</p>}
                   {l.notes && <p className="text-xs text-muted-foreground">{l.notes}</p>}
                 </CardContent>
