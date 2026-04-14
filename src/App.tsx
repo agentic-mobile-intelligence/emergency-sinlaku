@@ -15,6 +15,7 @@ import ContributePage from "@/pages/ContributePage"
 import VolunteerPage from "@/pages/VolunteerPage"
 import VolunteerSheetsPage from "@/pages/VolunteerSheetsPage"
 import VolunteerLeaderPage from "@/pages/VolunteerLeaderPage"
+import InfoPage from "@/pages/InfoPage"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -62,7 +63,21 @@ function LandingPage() {
         </div>
       </div>
 
-      <div className="mt-6 text-center text-sm text-gray-500 space-y-1">
+      {/* FEMA Declaration Banner */}
+      <div className="mt-6 w-full max-w-md rounded-xl border border-[#1E3A5F]/20 bg-[#1E3A5F]/5 p-4">
+        <p className="text-xs font-semibold text-[#1E3A5F] mb-1">FEMA Emergency Declaration Approved</p>
+        <p className="text-xs text-gray-600 mb-3">
+          Federal disaster relief activated — 75% federal funding for emergency protective measures.
+        </p>
+        <Link
+          to="/info"
+          className="block bg-[#1E3A5F] text-white text-sm font-semibold rounded-lg py-2.5 text-center hover:bg-[#2a4f7a] transition"
+        >
+          View Emergency Info & Updates
+        </Link>
+      </div>
+
+      <div className="mt-4 text-center text-sm text-gray-500 space-y-1">
         <p><a href="tel:911" className="text-[#DC2626] font-bold">911</a> Emergency &nbsp;|&nbsp; <a href="tel:311" className="text-[#1E3A5F] font-bold">311</a> Non-Emergency</p>
         <p>FEMA: <a href="tel:18006213362" className="text-[#1E3A5F] font-bold">1-800-621-3362</a></p>
       </div>
@@ -112,6 +127,7 @@ function App() {
           <Route path="/volunteer" element={<VolunteerPage />} />
           <Route path="/volunteer/sheets" element={<VolunteerSheetsPage />} />
           <Route path="/volunteer-leader" element={<VolunteerLeaderPage />} />
+          <Route path="/info" element={<InfoPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />

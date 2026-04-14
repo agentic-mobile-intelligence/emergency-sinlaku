@@ -31,7 +31,7 @@ export default function StickyHeader() {
               to="/request-aid"
               className="bg-[#DC2626] text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-red-700 transition"
             >
-              Sign up as Recipient
+              Request Aid
             </Link>
             <Link
               to="/provider/register"

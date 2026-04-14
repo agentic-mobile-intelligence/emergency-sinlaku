@@ -100,7 +100,7 @@ interface FormState {
   no_contact_explanation: string
   household_size: string
   needs: ServiceType[]
-  dogs_nearby: "" | "yes" | "no"
+  dogs_nearby: "" | "yes" | "no" | "unsure"
   safely_accessible: Accessibility | ""
   medical_needs: MedicalNeed[]
   medical_notes: string
@@ -131,13 +131,60 @@ const defaultForm: FormState = {
   notes: "",
 }
 
+// ── Dev prefill (localhost only) ─────────────────────────────────────────────
+
+const DEV_NAMES = ["Maria Cruz", "Juan Santos", "Ana Taitano", "Pedro Blas", "Rosa Manibusan", "Frank Camacho"]
+const DEV_ISLANDS: Island[] = ["guam", "saipan", "tinian", "rota"]
+const DEV_PHONES = ["(671) 477-1234", "(671) 632-5678", "(671) 734-9012", "(671) 646-3456"]
+const DEV_EMAILS = ["maria@test.gu", "juan@test.gu", "ana@test.gu", "pedro@test.gu"]
+const DEV_NEEDS: ServiceType[][] = [
+  ["food", "water"], ["shelter", "tarps"], ["medical"], ["food", "clothing", "water"],
+  ["transportation", "cleanup"], ["shelter", "food", "medical"],
+]
+const DEV_DOGS: ("yes" | "no" | "unsure")[] = ["yes", "no", "unsure"]
+const DEV_ACCESS: ("yes" | "no" | "unsure")[] = ["yes", "no", "unsure"]
+const DEV_NOTES = [
+  "Two elderly grandparents need daily medication delivery.",
+  "Road to our house is partially blocked by fallen tree.",
+  "We have a newborn — need formula and diapers urgently.",
+  "No power since the storm. Generator ran out of fuel.",
+  "Roof is damaged, tarps blowing away in wind.",
+  "",
+]
+
+function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)] }
+
+function devPrefill(): FormState {
+  return {
+    name: pick(DEV_NAMES),
+    island: pick(DEV_ISLANDS),
+    landline_phone: Math.random() > 0.5 ? pick(DEV_PHONES) : "",
+    mobile_phone: pick(DEV_PHONES),
+    email: Math.random() > 0.5 ? pick(DEV_EMAILS) : "",
+    no_contact_explanation: "",
+    household_size: String(Math.floor(Math.random() * 7) + 1),
+    needs: pick(DEV_NEEDS),
+    dogs_nearby: pick(DEV_DOGS),
+    safely_accessible: pick(DEV_ACCESS),
+    medical_needs: [],
+    medical_notes: "",
+    elderly_count: Math.random() > 0.6 ? String(Math.floor(Math.random() * 3)) : "",
+    children_count: Math.random() > 0.4 ? String(Math.floor(Math.random() * 4)) : "",
+    disabled_count: Math.random() > 0.8 ? "1" : "",
+    cannot_relocate: Math.random() > 0.7,
+    notes: pick(DEV_NOTES),
+  }
+}
+
 function hasContact(f: FormState) {
   return f.landline_phone.trim() || f.mobile_phone.trim() || f.email.trim()
 }
 
 function AidRequestForm() {
   const navigate = useNavigate()
-  const [form, setForm] = useState<FormState>(defaultForm)
+  const [form, setForm] = useState<FormState>(() =>
+    import.meta.env.DEV ? devPrefill() : defaultForm
+  )
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -174,30 +221,35 @@ function AidRequestForm() {
     if (!validate()) return
     setSubmitting(true)
     try {
-      const { error } = await supabase.from("aid_requests").insert({
+      // Core fields present in all environments
+      const payload: Record<string, unknown> = {
         name: form.name.trim(),
-        island: form.island as Island,
+        island: form.island,
         landline_phone: form.landline_phone.trim() || null,
         mobile_phone: form.mobile_phone.trim() || null,
         email: form.email.trim() || null,
         no_contact_explanation: form.no_contact_explanation.trim() || null,
         household_size: Number(form.household_size),
         needs: form.needs,
-        dogs_nearby: form.dogs_nearby === "yes",
-        safely_accessible: form.safely_accessible as Accessibility,
-        medical_needs: form.medical_needs.length > 0 ? form.medical_needs : null,
-        medical_notes: form.medical_notes.trim() || null,
-        elderly_count: form.elderly_count ? Number(form.elderly_count) : null,
-        children_count: form.children_count ? Number(form.children_count) : null,
-        disabled_count: form.disabled_count ? Number(form.disabled_count) : null,
-        cannot_relocate: form.cannot_relocate,
+        dogs_nearby: form.dogs_nearby !== "no",
+        safely_accessible: form.safely_accessible,
         notes: form.notes.trim() || null,
-      })
+      }
+      // Extended fields (prod only — dev schema may not have these)
+      if (!import.meta.env.DEV) {
+        payload.medical_needs = form.medical_needs.length > 0 ? form.medical_needs : null
+        payload.medical_notes = form.medical_notes.trim() || null
+        payload.elderly_count = form.elderly_count ? Number(form.elderly_count) : null
+        payload.children_count = form.children_count ? Number(form.children_count) : null
+        payload.disabled_count = form.disabled_count ? Number(form.disabled_count) : null
+        payload.cannot_relocate = form.cannot_relocate
+      }
+      const { error } = await supabase.from("aid_requests").insert(payload as any)
       if (error) throw error
       setSubmitted(true)
     } catch (err) {
       console.error(err)
-      toast.error("Submission failed. Please try again or call FEMA at 1-800-621-3362.")
+      toast.error("Submission failed. Please try again or call 911 for emergencies.")
     } finally {
       setSubmitting(false)
     }
@@ -232,9 +284,10 @@ function AidRequestForm() {
     <form onSubmit={handleSubmit} noValidate className="space-y-8">
       {/* Privacy Notice */}
       <div className="rounded-lg border border-blue-300 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800 p-4 text-sm text-blue-900 dark:text-blue-200">
-        <strong>Privacy Notice:</strong> This form does NOT collect Social Security Numbers,
-        home addresses, or other confidential personal information. Your request will be
-        visible to registered service providers on this platform.
+        <strong>Privacy Notice:</strong> This form does NOT collect Social Security Numbers
+        or other confidential personal information. Your home address can optionally be
+        provided if services need it to reach you. Your request will be visible to
+        registered service providers on this platform.
       </div>
 
       {/* Name */}
@@ -333,13 +386,14 @@ function AidRequestForm() {
             </Label>
             <p className="text-xs text-muted-foreground">
               Since no phone or email was provided, describe how responders can contact you.
+              If applicable, please share your physical address so emergency responders may reach you.
             </p>
             <Textarea
               id="no_contact"
               className="text-base min-h-[96px]"
               value={form.no_contact_explanation}
               onChange={(e) => set("no_contact_explanation", e.target.value)}
-              placeholder="e.g. I'm at my neighbor Rosa's house in Dededo. Ask for Maria."
+              placeholder="e.g. I'm at 123 Marine Corps Dr, Dededo. Ask for Maria at the blue house."
             />
             {errors.no_contact_explanation && (
               <p className="text-sm text-destructive">{errors.no_contact_explanation}</p>
@@ -397,7 +451,7 @@ function AidRequestForm() {
       {/* Dogs Nearby */}
       <fieldset className="space-y-3">
         <legend className="text-base font-semibold">
-          Are there dogs near your home?{" "}
+          Are there dogs or wild pigs near your home?{" "}
           <span className="text-destructive">*</span>
         </legend>
         <p className="text-xs text-muted-foreground">
@@ -405,16 +459,20 @@ function AidRequestForm() {
         </p>
         <RadioGroup
           value={form.dogs_nearby}
-          onValueChange={(v) => set("dogs_nearby", v as "yes" | "no")}
-          className="flex gap-4"
+          onValueChange={(v) => set("dogs_nearby", v as "yes" | "no" | "unsure")}
+          className="flex gap-3 flex-wrap"
         >
-          {["yes", "no"].map((v) => (
+          {[
+            { value: "yes", label: "Yes" },
+            { value: "no", label: "No" },
+            { value: "unsure", label: "Unsure" },
+          ].map(({ value, label }) => (
             <label
-              key={v}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card px-5 py-3 cursor-pointer hover:bg-accent transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5 flex-1"
+              key={value}
+              className="flex items-center gap-3 rounded-lg border border-border bg-card px-5 py-3 cursor-pointer hover:bg-accent transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5 flex-1 min-w-[80px]"
             >
-              <RadioGroupItem value={v} className="h-5 w-5 flex-shrink-0" />
-              <span className="text-base font-medium capitalize">{v}</span>
+              <RadioGroupItem value={value} className="h-5 w-5 flex-shrink-0" />
+              <span className="text-base font-medium">{label}</span>
             </label>
           ))}
         </RadioGroup>
@@ -597,7 +655,7 @@ function AidRequestForm() {
 
       <p className="text-xs text-center text-muted-foreground pb-4">
         Your request will be visible to all registered service providers on this platform.
-        No Social Security Numbers or home addresses are collected or stored.
+        No Social Security Numbers are collected or stored.
       </p>
     </form>
   )
