@@ -388,49 +388,51 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
 
     setLoading(true)
     try {
-      if (DEV) {
-        // Dev: upsert with fixed id — idempotent, safe to repeat
-        const { error: orgError } = await supabaseClient.from("organizations").upsert({
-          id: DEV_ORG.id,
-          user_id: userId,
-          name: form.name.trim(),
-          description: form.description.trim() || null,
-          mailing_address: form.mailing_address.trim(),
-          physical_address: form.physical_address.trim(),
-          location_lat: form.location_lat,
-          location_lng: form.location_lng,
-          contact_phone: form.contact_phone.trim(),
-          contact_email: form.contact_email.trim() || null,
-          whatsapp: form.whatsapp.trim() || null,
-          service_types: form.service_types,
-          islands: form.islands,
-          verified: false,
-          verification_requested: false,
-        }, { onConflict: "id" })
-        if (orgError) throw orgError
-      } else {
-        const { error: orgError } = await supabaseClient.from("organizations").insert({
-          user_id: userId,
-          name: form.name.trim(),
-          description: form.description.trim() || null,
-          mailing_address: form.mailing_address.trim(),
-          physical_address: form.physical_address.trim(),
-          location_lat: form.location_lat,
-          location_lng: form.location_lng,
-          contact_phone: form.contact_phone.trim(),
-          contact_email: form.contact_email.trim() || null,
-          whatsapp: form.whatsapp.trim() || null,
-          service_types: form.service_types,
-          islands: form.islands,
-          verified: false,
-          verification_requested: false,
-        })
-        if (orgError) throw orgError
+      const orgPayload = {
+        user_id: userId,
+        name: form.name.trim(),
+        description: form.description.trim() || null,
+        mailing_address: form.mailing_address.trim(),
+        physical_address: form.physical_address.trim(),
+        location_lat: form.location_lat,
+        location_lng: form.location_lng,
+        contact_phone: form.contact_phone.trim(),
+        contact_email: form.contact_email.trim() || null,
+        whatsapp: form.whatsapp.trim() || null,
+        service_types: form.service_types,
+        islands: form.islands,
+        verified: false,
+        verification_requested: false,
       }
 
-      // Upsert profile with Clerk user ID as the identifier.
-      // clerk_user_id and role columns are added by migration 20260413190000.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let orgId: string
+      if (DEV) {
+        const { data: orgData, error: orgError } = await supabaseClient
+          .from("organizations")
+          .upsert({ id: DEV_ORG.id, ...orgPayload }, { onConflict: "id" })
+          .select("id")
+          .single()
+        if (orgError) throw orgError
+        orgId = orgData.id
+      } else {
+        const { data: orgData, error: orgError } = await supabaseClient
+          .from("organizations")
+          .insert(orgPayload)
+          .select("id")
+          .single()
+        if (orgError) throw orgError
+        orgId = orgData.id
+      }
+
+      // Add user as owner member of the org
+      await (supabaseClient.from("org_members") as any).upsert({
+        organization_id: orgId,
+        clerk_user_id: userId,
+        display_name: "Provider",
+        role: "owner",
+      }, { onConflict: "organization_id,clerk_user_id" })
+
+      // Upsert profile with Clerk user ID as the identifier
       await (supabaseClient.from("profiles") as any).upsert({
         id: crypto.randomUUID(),
         clerk_user_id: userId,
