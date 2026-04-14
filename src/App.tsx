@@ -18,6 +18,7 @@ import VolunteerLeaderPage from "@/pages/VolunteerLeaderPage"
 import InfoPage from "@/pages/InfoPage"
 import EmergencyContactsPage from "@/pages/EmergencyContactsPage"
 import NewsPage from "@/pages/NewsPage"
+import OrgMembersPage from "@/pages/OrgMembersPage"
 import AnnouncementBanner from "@/components/AnnouncementBanner"
 import VolunteerStats from "@/components/VolunteerStats"
 
@@ -130,6 +131,7 @@ function App() {
           <Route path="/provider/register" element={<ProviderRegisterPage />} />
           <Route path="/provider/register/failed" element={<ProviderRegisterFailedPage />} />
           <Route path="/provider/dashboard" element={<ProviderDashboardPage />} />
+          <Route path="/provider/org/:orgId/members" element={<OrgMembersPage />} />
           <Route path="/support/anonymous" element={<AnonymousSupportPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
