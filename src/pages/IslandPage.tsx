@@ -3,7 +3,7 @@ import { useParams, useNavigate, Navigate } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import { Filter, MapPin, Clock, Phone, ChevronDown, Heart, Building2, Shield, CheckCircle } from "lucide-react"
+import { Filter, MapPin, Clock, Phone, ChevronDown, Heart, Building2, Shield, CheckCircle, Printer, WifiOff } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -73,6 +73,7 @@ export default function IslandPage() {
   const [offerings, setOfferings] = useState<Offering[]>([])
   const [orgs, setOrgs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
   const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set(Constants.public.Enums.service_type))
   const [activeStatuses, setActiveStatuses] = useState<Set<string>>(new Set(["active", "planned"]))
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -101,6 +102,18 @@ export default function IslandPage() {
         setOrgs((data ?? []).filter((o: any) => !o.is_archived))
       })
   }, [island])
+
+  // Offline detection
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true)
+    const goOnline = () => setIsOffline(false)
+    window.addEventListener("offline", goOffline)
+    window.addEventListener("online", goOnline)
+    return () => {
+      window.removeEventListener("offline", goOffline)
+      window.removeEventListener("online", goOnline)
+    }
+  }, [])
 
   const filtered = useMemo(
     () =>
@@ -179,6 +192,34 @@ export default function IslandPage() {
               <div className="w-10 h-1 bg-gray-300 rounded-full" />
             </div>
 
+            {/* Print header (hidden on screen, shown in print) */}
+            <div className="print-header hidden">
+              Sinlaku Relief Directory — {meta?.label}
+            </div>
+            <div className="print-subtitle hidden">
+              Emergency services as of {new Date().toLocaleDateString()} — sinlaku.directory.gu/{island}
+            </div>
+
+            {/* Offline banner */}
+            {isOffline && (
+              <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800 no-print">
+                <WifiOff className="w-4 h-4 shrink-0" />
+                <span><strong>You are offline.</strong> Showing cached data.</span>
+              </div>
+            )}
+
+            {/* Print button */}
+            <div className="flex gap-2 no-print">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs flex-1"
+                onClick={() => window.print()}
+              >
+                <Printer className="w-3 h-3 mr-1" /> Print Service List
+              </Button>
+            </div>
+
             {/* Service type filters */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -235,7 +276,7 @@ export default function IslandPage() {
                   key={o.id}
                   ref={(el) => { cardRefs.current[o.id] = el }}
                   data-testid="service-card"
-                  className={`cursor-pointer transition-all ${selectedId === o.id ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
+                  className={`cursor-pointer transition-all print-card ${selectedId === o.id ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
                   onClick={() => selectOffering(o.id)}
                 >
                   <CardContent className="p-3 space-y-1.5">
