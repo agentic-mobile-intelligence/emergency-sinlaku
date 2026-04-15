@@ -292,7 +292,7 @@ export default function IslandPage() {
                   Zoom Earth — Sinlaku Live Tracker
                 </a>
                 <a href="https://ghs.guam.gov" target="_blank" rel="noopener" className="block text-blue-600 hover:underline">
-                  GovGuam Homeland Security / OCD
+                  GHS / Office of Civil Defense
                 </a>
               </div>
             </div>

@@ -442,8 +442,9 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
 
       toast.success("Registration submitted! Welcome to the network.")
       onDone()
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Registration failed. Please try again."
+    } catch (err: any) {
+      console.error("Registration error:", err)
+      const msg = err?.message ?? err?.details ?? "Registration failed. Please try again."
       setError(msg)
       toast.error(msg)
       onError(msg)

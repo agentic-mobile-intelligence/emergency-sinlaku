@@ -101,12 +101,16 @@ export default function ContributePage() {
               <p className="text-xs text-gray-500">
                 Reach the project team at{" "}
                 <a
-                  href="https://wa.me/16714727234"
+                  href="https://wa.me/16716887638"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#1E3A5F] underline"
                 >
-                  +1 (671) 472-7234
+                  +1 (671) 688-7638
+                </a>{" "}
+                or email{" "}
+                <a href="mailto:admin@guahan.tech" className="text-[#1E3A5F] underline">
+                  admin@guahan.tech
                 </a>{" "}
                 for data corrections, partnership questions, or anything else.
               </p>

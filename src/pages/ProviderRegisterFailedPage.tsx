@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { AlertTriangle, MessageCircle, Camera, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-const SUPPORT_WHATSAPP = "+16719695678"
+const SUPPORT_WHATSAPP = "+16716887638"
 const SUPPORT_WHATSAPP_URL = `https://wa.me/${SUPPORT_WHATSAPP.replace(/\D/g, "")}`
 
 export default function ProviderRegisterFailedPage() {
@@ -54,7 +54,7 @@ export default function ProviderRegisterFailedPage() {
               </div>
               <div>
                 <p className="font-semibold text-sm">Contact us on WhatsApp</p>
-                <p className="text-xs text-muted-foreground">{SUPPORT_WHATSAPP} — GovGuam OCD Support</p>
+                <p className="text-xs text-muted-foreground">{SUPPORT_WHATSAPP} — Guåhan.TECH Support</p>
               </div>
             </div>
 
