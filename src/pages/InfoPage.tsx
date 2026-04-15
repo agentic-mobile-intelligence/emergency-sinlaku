@@ -137,6 +137,26 @@ export default function InfoPage() {
           </CardContent>
         </Card>
 
+        {/* About This Tool */}
+        <Card className="border border-purple-200 bg-purple-50/50">
+          <CardContent className="pt-5 space-y-3">
+            <p className="text-sm text-gray-700">
+              This tool was built <strong>mainly with Anthropic's Claude Code</strong> and has enabled
+              rapid development to support our most vulnerable island communities for exactly this
+              purpose — getting critical information to people when they need it most.
+            </p>
+            <a
+              href="https://www.linkedin.com/posts/jordan-elizaga_guam-sinlaku-emergencyresponse-activity-7449282234555125760-lTZg"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-purple-700 hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Read the story behind this project on LinkedIn
+            </a>
+          </CardContent>
+        </Card>
+
         {/* Emergency Contacts */}
         <Card>
           <CardHeader className="pb-3">
