@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Phone, MessageCircle, Clock, MapPin, Copy, Share2, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import type { MapOffering } from "./MapComponent"
+import CommunityConfirmations from "./CommunityConfirmations"
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   active: { bg: "bg-green-100", text: "text-green-800", label: "Active" },
@@ -114,6 +115,9 @@ export default function ServiceCard({ offering, isExpanded, onToggle }: ServiceC
                 </a>
               )}
             </div>
+
+            {/* Community Confirmations */}
+            <CommunityConfirmations offeringId={offering.id} />
 
             {/* Actions */}
             <div className="flex gap-2 pt-1">
