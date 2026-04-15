@@ -3,11 +3,16 @@ import { useNavigate, Link } from "react-router-dom"
 import {
   Loader2, CheckCircle, Building2, MapPin, Phone, Mail,
   MessageCircle, Shield, ExternalLink, ArrowLeft, Plus, Users,
+  Pencil, Archive, MailCheck, X, Clock,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -51,6 +56,10 @@ export default function ProviderDashboardPage() {
 
   const [myOrgs, setMyOrgs] = useState<OrgWithRole[]>([])
   const [orgsLoading, setOrgsLoading] = useState(true)
+  const [editingOrg, setEditingOrg] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<Record<string, any>>({})
+  const [editSaving, setEditSaving] = useState(false)
+  const [archiving, setArchiving] = useState<string | null>(null)
 
   // Join existing org state
   const [allOrgs, setAllOrgs] = useState<AllOrg[]>([])
@@ -90,6 +99,89 @@ export default function ProviderDashboardPage() {
       .then(({ data }) => setAllOrgs((data as AllOrg[]) ?? []))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showJoin, joinMode])
+
+  const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const
+  const DAY_LABELS: Record<string, string> = {
+    mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
+  }
+
+  function startEdit(org: OrgWithRole["org"]) {
+    const hours = (org as any).service_hours ?? {}
+    setEditForm({
+      name: org.name,
+      description: org.description ?? "",
+      contact_phone: org.contact_phone ?? "",
+      contact_email: org.contact_email ?? "",
+      whatsapp: org.whatsapp ?? "",
+      physical_address: org.physical_address ?? "",
+      mailing_address: org.mailing_address ?? "",
+      ...Object.fromEntries(DAYS.map((d) => [`hours_${d}`, hours[d] ?? ""])),
+      ...Object.fromEntries(DAYS.map((d) => [`na_${d}`, hours[d] === "N/A"])),
+    })
+    setEditingOrg(org.id)
+  }
+
+  async function saveEdit(orgId: string) {
+    setEditSaving(true)
+    const service_hours = Object.fromEntries(
+      DAYS.map((d) => [d, editForm[`na_${d}`] ? "N/A" : (editForm[`hours_${d}`] || "")])
+    )
+    const { error } = await (supabaseClient.from("organizations") as any)
+      .update({
+        name: editForm.name,
+        description: editForm.description || null,
+        contact_phone: editForm.contact_phone || null,
+        contact_email: editForm.contact_email || null,
+        whatsapp: editForm.whatsapp || null,
+        physical_address: editForm.physical_address || null,
+        mailing_address: editForm.mailing_address || null,
+        service_hours,
+      })
+      .eq("id", orgId)
+    if (error) toast.error("Save failed: " + error.message)
+    else {
+      toast.success("Organization updated!")
+      setEditingOrg(null)
+      // Re-fetch
+      const { data } = await supabaseClient
+        .from("org_members")
+        .select("organization_id, role, org:organizations(*)")
+        .eq("clerk_user_id", userId!)
+      setMyOrgs((data as unknown as OrgWithRole[]) ?? [])
+    }
+    setEditSaving(false)
+  }
+
+  async function archiveOrg(orgId: string) {
+    if (!confirm("Archive this organization? It will be hidden from the directory and lose its verification status.")) return
+    setArchiving(orgId)
+    const { error } = await (supabaseClient.from("organizations") as any)
+      .update({ is_archived: true, verified: false, verification_requested: false })
+      .eq("id", orgId)
+    if (error) toast.error("Archive failed: " + error.message)
+    else {
+      toast.success("Organization archived.")
+      setMyOrgs((prev) => prev.filter((m) => m.organization_id !== orgId))
+    }
+    setArchiving(null)
+  }
+
+  function openVerifyEmail(org: OrgWithRole["org"]) {
+    const islands = org.islands.map((i: string) => islandLabels[i] ?? i).join(", ")
+    const services = org.service_types.map((s: string) => serviceTypeLabels[s] ?? s).join(", ")
+    const subject = encodeURIComponent(`Verification Request: ${org.name}`)
+    const body = encodeURIComponent(
+      `Hi Guåhan.TECH,\n\nI'd like to request verification for my organization on the Sinlaku Relief Directory.\n\n` +
+      `Organization: ${org.name}\n` +
+      `Phone: ${org.contact_phone ?? "N/A"}\n` +
+      `Email: ${org.contact_email ?? "N/A"}\n` +
+      `Islands: ${islands}\n` +
+      `Services: ${services}\n` +
+      `Address: ${org.physical_address ?? "N/A"}\n\n` +
+      `Thank you.`
+    )
+    window.open(`mailto:admin@guahan.tech?subject=${subject}&body=${body}`)
+  }
 
   async function joinOrg() {
     if (!userId || !selectedOrgId) return
@@ -217,96 +309,233 @@ export default function ProviderDashboardPage() {
         )}
 
         {/* Organization Cards */}
-        {myOrgs.length > 0 ? (
-          myOrgs.map(({ org, role }) => (
-            <Card key={org.id} className="border-2 border-[#1E3A5F]/20">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-[#1E3A5F]" />
-                    <div>
-                      <CardTitle className="text-lg text-[#1E3A5F]">{org.name}</CardTitle>
-                      <Badge variant="outline" className="text-xs capitalize mt-0.5">{role}</Badge>
-                    </div>
-                  </div>
-                  {org.verified ? (
-                    <Badge className="bg-green-100 text-green-800 border-green-200">
-                      <CheckCircle className="w-3 h-3 mr-1" /> Verified
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-gray-500">
-                      <Shield className="w-3 h-3 mr-1" /> Unverified
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {org.description && <p className="text-sm text-gray-600">{org.description}</p>}
+        {myOrgs.filter((m) => !(m.org as any)?.is_archived).length > 0 ? (
+          myOrgs
+            .filter((m) => !(m.org as any)?.is_archived)
+            .map(({ org, role, organization_id }) => {
+              const isEditing = editingOrg === org.id
+              const hours = (org as any).service_hours as Record<string, string> | null
 
-                <div className="space-y-2">
-                  {org.contact_phone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-4 h-4 text-gray-400" /><span>{org.contact_phone}</span>
+              return (
+                <Card key={org.id} className="border-2 border-[#1E3A5F]/20">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-[#1E3A5F]" />
+                        <div>
+                          <CardTitle className="text-lg text-[#1E3A5F]">{org.name}</CardTitle>
+                          <Badge variant="outline" className="text-xs capitalize mt-0.5">{role}</Badge>
+                        </div>
+                      </div>
+                      {org.verified ? (
+                        <Badge className="bg-green-100 text-green-800 border-green-200">
+                          <CheckCircle className="w-3 h-3 mr-1" /> Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-gray-500">
+                          <Shield className="w-3 h-3 mr-1" /> Unverified
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                  {org.contact_email && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="w-4 h-4 text-gray-400" /><span>{org.contact_email}</span>
-                    </div>
-                  )}
-                  {org.whatsapp && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <MessageCircle className="w-4 h-4 text-gray-400" /><span>WhatsApp: {org.whatsapp}</span>
-                    </div>
-                  )}
-                </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Edit mode */}
+                    {isEditing ? (
+                      <div className="space-y-4 rounded-lg border border-[#1E3A5F]/20 p-4 bg-gray-50">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold text-[#1E3A5F]">Edit Organization</p>
+                          <button onClick={() => setEditingOrg(null)} className="text-gray-400 hover:text-gray-600">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Name</Label>
+                            <Input value={editForm.name ?? ""} onChange={(e) => setEditForm((p: any) => ({ ...p, name: e.target.value }))} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Description</Label>
+                            <Textarea value={editForm.description ?? ""} onChange={(e) => setEditForm((p: any) => ({ ...p, description: e.target.value }))} rows={2} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Phone</Label>
+                              <Input value={editForm.contact_phone ?? ""} onChange={(e) => setEditForm((p: any) => ({ ...p, contact_phone: e.target.value }))} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Email</Label>
+                              <Input value={editForm.contact_email ?? ""} onChange={(e) => setEditForm((p: any) => ({ ...p, contact_email: e.target.value }))} />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">WhatsApp</Label>
+                            <Input value={editForm.whatsapp ?? ""} onChange={(e) => setEditForm((p: any) => ({ ...p, whatsapp: e.target.value }))} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Physical Address</Label>
+                              <Input value={editForm.physical_address ?? ""} onChange={(e) => setEditForm((p: any) => ({ ...p, physical_address: e.target.value }))} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Mailing Address</Label>
+                              <Input value={editForm.mailing_address ?? ""} onChange={(e) => setEditForm((p: any) => ({ ...p, mailing_address: e.target.value }))} />
+                            </div>
+                          </div>
 
-                {(org.physical_address || org.mailing_address) && (
-                  <div className="space-y-1 text-sm">
-                    {org.physical_address && (
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                        <span>{org.physical_address}</span>
+                          {/* Service Hours */}
+                          <div className="space-y-2">
+                            <Label className="text-xs font-semibold">Service Hours</Label>
+                            <div className="space-y-1.5">
+                              {DAYS.map((d) => (
+                                <div key={d} className="flex items-center gap-2">
+                                  <span className="text-xs font-medium w-8 text-gray-600">{DAY_LABELS[d]}</span>
+                                  <Input
+                                    className={`h-8 text-xs flex-1 ${editForm[`na_${d}`] ? "opacity-40" : ""}`}
+                                    value={editForm[`na_${d}`] ? "" : (editForm[`hours_${d}`] ?? "")}
+                                    onChange={(e) => setEditForm((p: any) => ({ ...p, [`hours_${d}`]: e.target.value }))}
+                                    disabled={editForm[`na_${d}`]}
+                                    placeholder="e.g. 9am - 5pm"
+                                  />
+                                  <div className="flex items-center gap-1">
+                                    <Switch
+                                      checked={!editForm[`na_${d}`]}
+                                      onCheckedChange={(v) => setEditForm((p: any) => ({
+                                        ...p,
+                                        [`na_${d}`]: !v,
+                                        ...(v ? {} : { [`hours_${d}`]: "" }),
+                                      }))}
+                                    />
+                                    <span className="text-xs text-gray-400 w-6">{editForm[`na_${d}`] ? "N/A" : ""}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => saveEdit(org.id)}
+                            disabled={editSaving}
+                            className="flex-1 text-white"
+                            style={{ backgroundColor: "#1E3A5F" }}
+                          >
+                            {editSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                          </Button>
+                          <Button variant="outline" onClick={() => setEditingOrg(null)}>Cancel</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {org.description && <p className="text-sm text-gray-600">{org.description}</p>}
+
+                        <div className="space-y-2">
+                          {org.contact_phone && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="w-4 h-4 text-gray-400" /><span>{org.contact_phone}</span>
+                            </div>
+                          )}
+                          {org.contact_email && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="w-4 h-4 text-gray-400" /><span>{org.contact_email}</span>
+                            </div>
+                          )}
+                          {org.whatsapp && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <MessageCircle className="w-4 h-4 text-gray-400" /><span>WhatsApp: {org.whatsapp}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {(org.physical_address || org.mailing_address) && (
+                          <div className="space-y-1 text-sm">
+                            {org.physical_address && (
+                              <div className="flex items-start gap-2">
+                                <MapPin className="w-4 h-4 text-gray-400 mt-0.5" /><span>{org.physical_address}</span>
+                              </div>
+                            )}
+                            {org.mailing_address && (
+                              <div className="flex items-start gap-2">
+                                <Mail className="w-4 h-4 text-gray-400 mt-0.5" /><span>{org.mailing_address}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Service Hours */}
+                        {hours && Object.values(hours).some((v) => v && v !== "N/A") && (
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                              <Clock className="w-3 h-3" /> Service Hours
+                            </p>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
+                              {DAYS.map((d) => (
+                                <div key={d} className={`flex justify-between ${hours[d] === "N/A" ? "text-gray-300" : "text-gray-600"}`}>
+                                  <span className="font-medium">{DAY_LABELS[d]}</span>
+                                  <span>{hours[d] || "—"}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-1.5">
+                          {org.islands.map((island: string) => (
+                            <Badge key={island} variant="outline" className="text-xs">
+                              {islandLabels[island] ?? island}
+                            </Badge>
+                          ))}
+                          {org.service_types.map((type: string) => (
+                            <Badge key={type} className="text-xs bg-[#1E3A5F]/10 text-[#1E3A5F] border-[#1E3A5F]/20">
+                              {serviceTypeLabels[type] ?? type}
+                            </Badge>
+                          ))}
+                        </div>
+
+                        {!org.verified && (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                            <strong>Verification pending</strong> — request verification below or contact us.
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Actions */}
+                    {!isEditing && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link
+                          to={`/provider/org/${org.id}/members`}
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-[#1E3A5F]/30 text-[#1E3A5F] text-xs font-semibold py-2 hover:bg-[#1E3A5F]/5 transition"
+                        >
+                          <Users className="w-3.5 h-3.5" /> Members
+                        </Link>
+                        <button
+                          onClick={() => startEdit(org)}
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-[#1E3A5F]/30 text-[#1E3A5F] text-xs font-semibold py-2 hover:bg-[#1E3A5F]/5 transition"
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        {!org.verified && (
+                          <button
+                            onClick={() => openVerifyEmail(org)}
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-green-300 text-green-700 text-xs font-semibold py-2 hover:bg-green-50 transition"
+                          >
+                            <MailCheck className="w-3.5 h-3.5" /> Request Verification
+                          </button>
+                        )}
+                        <button
+                          onClick={() => archiveOrg(org.id)}
+                          disabled={archiving === org.id}
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-semibold py-2 hover:bg-red-50 transition"
+                        >
+                          {archiving === org.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+                          Archive
+                        </button>
                       </div>
                     )}
-                    {org.mailing_address && (
-                      <div className="flex items-start gap-2">
-                        <Mail className="w-4 h-4 text-gray-400 mt-0.5" />
-                        <span>{org.mailing_address}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-1.5">
-                  {org.islands.map((island: string) => (
-                    <Badge key={island} variant="outline" className="text-xs">
-                      {islandLabels[island] ?? island}
-                    </Badge>
-                  ))}
-                  {org.service_types.map((type: string) => (
-                    <Badge key={type} className="text-xs bg-[#1E3A5F]/10 text-[#1E3A5F] border-[#1E3A5F]/20">
-                      {serviceTypeLabels[type] ?? type}
-                    </Badge>
-                  ))}
-                </div>
-
-                {!org.verified && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                    <strong>Verification pending</strong> — contact us via WhatsApp or email to verify.
-                  </div>
-                )}
-
-                <Link
-                  to={`/provider/org/${org.id}/members`}
-                  className="flex items-center justify-center gap-2 w-full rounded-lg border border-[#1E3A5F]/30 text-[#1E3A5F] text-sm font-semibold py-2.5 hover:bg-[#1E3A5F]/5 transition"
-                >
-                  <Users className="w-4 h-4" />
-                  View Members
-                </Link>
-              </CardContent>
-            </Card>
-          ))
+                  </CardContent>
+                </Card>
+              )
+            })
         ) : (
           <Card className="border-dashed border-2">
             <CardContent className="py-8 text-center space-y-3">
@@ -325,6 +554,13 @@ export default function ProviderDashboardPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* View Archived link */}
+        <div className="text-center">
+          <Link to="/provider/archived" className="text-xs text-gray-400 hover:text-gray-600 hover:underline">
+            View Archived Organizations
+          </Link>
+        </div>
 
         {/* Help / Contact CTA */}
         <Card className="border border-[#1E3A5F]/20 bg-[#1E3A5F]/5">

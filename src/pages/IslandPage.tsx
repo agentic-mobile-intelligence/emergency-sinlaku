@@ -3,7 +3,8 @@ import { useParams, useNavigate, Navigate } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import { Filter, MapPin, Clock, Phone, ChevronDown } from "lucide-react"
+import { Filter, MapPin, Clock, Phone, ChevronDown, Heart, Building2, Shield, CheckCircle } from "lucide-react"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -70,6 +71,7 @@ export default function IslandPage() {
   const { island } = useParams<{ island: string }>()
   const navigate = useNavigate()
   const [offerings, setOfferings] = useState<Offering[]>([])
+  const [orgs, setOrgs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set(Constants.public.Enums.service_type))
   const [activeStatuses, setActiveStatuses] = useState<Set<string>>(new Set(["active", "planned"]))
@@ -89,6 +91,14 @@ export default function IslandPage() {
       .then(({ data, error }) => {
         if (!error && data) setOfferings(data as Offering[])
         setLoading(false)
+      })
+    // Fetch orgs that serve this island (for registered providers section)
+    supabase
+      .from("organizations")
+      .select("id, name, contact_phone, contact_email, service_types, verified, is_archived")
+      .contains("islands", [island])
+      .then(({ data }) => {
+        setOrgs((data ?? []).filter((o: any) => !o.is_archived))
       })
   }, [island])
 
@@ -296,6 +306,48 @@ export default function IslandPage() {
                 </a>
               </div>
             </div>
+
+            {/* Donate CTA */}
+            <Link
+              to="/donate"
+              className="flex items-center justify-center gap-2 w-full rounded-lg bg-[#DC2626] text-white text-sm font-semibold py-2.5 hover:bg-red-700 transition"
+            >
+              <Heart className="w-4 h-4" /> Support Relief Efforts
+            </Link>
+
+            {/* Registered Providers */}
+            {orgs.length > 0 && (
+              <div className="space-y-2 pt-2 border-t">
+                <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold">
+                  Registered Providers ({orgs.length})
+                </div>
+                <div className="space-y-1.5">
+                  {orgs.map((org: any) => (
+                    <div
+                      key={org.id}
+                      className={`rounded-lg border px-3 py-2 text-xs ${org.verified ? "border-green-200 bg-green-50/50" : "border-gray-200 bg-gray-50 opacity-70"}`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-semibold text-sm">{org.name}</span>
+                        {org.verified ? (
+                          <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                        ) : (
+                          <Shield className="w-3.5 h-3.5 text-gray-400" />
+                        )}
+                      </div>
+                      {org.contact_phone && (
+                        <a href={`tel:${org.contact_phone}`} className="text-blue-600 hover:underline block">
+                          {org.contact_phone}
+                        </a>
+                      )}
+                      {!org.verified && (
+                        <p className="text-gray-400 mt-1 italic">Unverified</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Request Aid CTA */}
             <Button className="w-full" style={{ backgroundColor: BRAND }} onClick={() => navigate("/request-aid")}>

@@ -118,6 +118,23 @@ export default function ContributePage() {
           </div>
         </section>
 
+        {/* Donate */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400">Support the Platform</h2>
+          <div className="rounded-xl border-2 border-[#DC2626]/20 bg-[#DC2626]/5 p-5 space-y-3">
+            <p className="text-sm text-gray-700">
+              This platform is built and maintained by <strong>Guåhan.TECH</strong>. Donations fund
+              platform operations and direct on-call support for affected communities.
+            </p>
+            <Link
+              to="/donate"
+              className="flex items-center justify-center gap-2 w-full rounded-lg bg-[#DC2626] text-white text-sm font-semibold py-3 hover:bg-red-700 transition"
+            >
+              Pledge to Donate
+            </Link>
+          </div>
+        </section>
+
         {/* Stack */}
         <section className="rounded-xl bg-gray-50 border border-gray-200 px-5 py-4 space-y-2">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">Tech Stack</h2>

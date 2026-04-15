@@ -309,6 +309,11 @@ function AuthStep() {
 
 // ── Step 2: Organization form ─────────────────────────────────────────────────
 
+const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const
+const DAY_LABELS: Record<string, string> = {
+  mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
+}
+
 interface OrgFormData {
   name: string
   description: string
@@ -321,6 +326,8 @@ interface OrgFormData {
   whatsapp: string
   service_types: ServiceType[]
   islands: Island[]
+  service_hours: Record<string, string>
+  hours_na: Record<string, boolean>
 }
 
 interface OrgStepProps {
@@ -343,6 +350,8 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
     whatsapp: DEV ? DEV_ORG.whatsapp : "",
     service_types: DEV ? DEV_ORG.service_types : [],
     islands: DEV ? DEV_ORG.islands : [],
+    service_hours: Object.fromEntries(DAYS.map((d) => [d, ""])),
+    hours_na: Object.fromEntries(DAYS.map((d) => [d, false])),
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -401,6 +410,9 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
         whatsapp: form.whatsapp.trim() || null,
         service_types: form.service_types,
         islands: form.islands,
+        service_hours: Object.fromEntries(
+          DAYS.map((d) => [d, form.hours_na[d] ? "N/A" : (form.service_hours[d] || "")])
+        ),
         verified: false,
         verification_requested: false,
       }
@@ -578,6 +590,40 @@ function OrgStep({ userId, onDone, onError }: OrgStepProps) {
           onChange={(e) => setForm((p) => ({ ...p, whatsapp: e.target.value }))}
           placeholder="+1 671 555-0100"
         />
+      </div>
+
+      {/* Service Hours */}
+      <div className="space-y-2">
+        <Label>Service hours <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
+        <p className="text-xs text-muted-foreground">Enter hours for each day or toggle N/A.</p>
+        <div className="space-y-1.5">
+          {DAYS.map((d) => (
+            <div key={d} className="flex items-center gap-2">
+              <span className="text-xs font-medium w-8 text-gray-600">{DAY_LABELS[d]}</span>
+              <Input
+                className={`h-8 text-xs flex-1 ${form.hours_na[d] ? "opacity-40" : ""}`}
+                value={form.hours_na[d] ? "" : form.service_hours[d]}
+                onChange={(e) => setForm((p) => ({
+                  ...p,
+                  service_hours: { ...p.service_hours, [d]: e.target.value },
+                }))}
+                disabled={form.hours_na[d]}
+                placeholder="e.g. 9am - 5pm"
+              />
+              <label className="flex items-center gap-1 cursor-pointer">
+                <Checkbox
+                  checked={form.hours_na[d]}
+                  onCheckedChange={(v) => setForm((p) => ({
+                    ...p,
+                    hours_na: { ...p.hours_na, [d]: !!v },
+                    service_hours: { ...p.service_hours, [d]: v ? "" : p.service_hours[d] },
+                  }))}
+                />
+                <span className="text-xs text-gray-400">N/A</span>
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-3">

@@ -19,6 +19,8 @@ import InfoPage from "@/pages/InfoPage"
 import EmergencyContactsPage from "@/pages/EmergencyContactsPage"
 import NewsPage from "@/pages/NewsPage"
 import OrgMembersPage from "@/pages/OrgMembersPage"
+import DonatePage from "@/pages/DonatePage"
+import ArchivedOrgsPage from "@/pages/ArchivedOrgsPage"
 import AnnouncementBanner from "@/components/AnnouncementBanner"
 import VolunteerStats from "@/components/VolunteerStats"
 
@@ -143,6 +145,8 @@ function App() {
           <Route path="/info" element={<InfoPage />} />
           <Route path="/emergency-contacts" element={<EmergencyContactsPage />} />
           <Route path="/news" element={<NewsPage />} />
+          <Route path="/donate" element={<DonatePage />} />
+          <Route path="/provider/archived" element={<ArchivedOrgsPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />
