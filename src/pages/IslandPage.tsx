@@ -3,7 +3,7 @@ import { useParams, useNavigate, Navigate } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import { Filter, MapPin, Clock, Phone, ChevronDown, Heart, Building2, Shield, CheckCircle, Printer, WifiOff } from "lucide-react"
+import { Filter, MapPin, Clock, Phone, ChevronDown, Heart, Building2, Shield, CheckCircle, Printer, WifiOff, ExternalLink } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -405,6 +405,18 @@ export default function IslandPage() {
                           category={o.organizations.org_category ?? "uncategorized"}
                           verified={o.organizations.verified}
                         />
+                      )}
+                      {o.organizations?.name === "Guam Seventh-day Adventist Clinic" && (
+                        <a
+                          href="/images/guam-seventh-day-adventist.jpg"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 border border-purple-300 rounded-md px-2.5 py-1.5 hover:bg-purple-50 transition"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          View Flyer
+                        </a>
                       )}
                     </CardContent>
                   </Card>
