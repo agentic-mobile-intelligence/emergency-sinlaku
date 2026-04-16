@@ -115,6 +115,44 @@ export type Database = {
         }
         Relationships: []
       }
+      community_confirmations: {
+        Row: {
+          author_name: string | null
+          clerk_user_id: string | null
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          message: string
+          offering_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          clerk_user_id?: string | null
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          message: string
+          offering_id: string
+        }
+        Update: {
+          author_name?: string | null
+          clerk_user_id?: string | null
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          message?: string
+          offering_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_confirmations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_updates: {
         Row: {
           author_name: string
@@ -147,6 +185,236 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      donation_campaigns: {
+        Row: {
+          created_at: string
+          description: string | null
+          goal_amount: number | null
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          goal_amount?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          goal_amount?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      donation_pledges: {
+        Row: {
+          amount_pledged: string | null
+          created_at: string
+          email: string | null
+          id: string
+          island: string | null
+          message: string | null
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          amount_pledged?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          island?: string | null
+          message?: string | null
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          amount_pledged?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          island?: string | null
+          message?: string | null
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      donations: {
+        Row: {
+          amount: number
+          campaign_id: string | null
+          created_at: string
+          donor_email: string | null
+          donor_name: string | null
+          id: string
+          is_public: boolean
+          island_earmark: Database["public"]["Enums"]["island"] | null
+          message: string | null
+          payment_method: string
+          status: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          amount: number
+          campaign_id?: string | null
+          created_at?: string
+          donor_email?: string | null
+          donor_name?: string | null
+          id?: string
+          is_public?: boolean
+          island_earmark?: Database["public"]["Enums"]["island"] | null
+          message?: string | null
+          payment_method?: string
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          amount?: number
+          campaign_id?: string | null
+          created_at?: string
+          donor_email?: string | null
+          donor_name?: string | null
+          id?: string
+          is_public?: boolean
+          island_earmark?: Database["public"]["Enums"]["island"] | null
+          message?: string | null
+          payment_method?: string
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "donation_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_leaders: {
+        Row: {
+          address: string
+          approved_at: string | null
+          approved_by: string | null
+          clerk_user_id: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          display_name: string
+          id: string
+          intended_services: string | null
+          island: Database["public"]["Enums"]["island"]
+          notes: string | null
+          organization_id: string | null
+          status: string
+        }
+        Insert: {
+          address: string
+          approved_at?: string | null
+          approved_by?: string | null
+          clerk_user_id?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          intended_services?: string | null
+          island: Database["public"]["Enums"]["island"]
+          notes?: string | null
+          organization_id?: string | null
+          status?: string
+        }
+        Update: {
+          address?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          clerk_user_id?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          intended_services?: string | null
+          island?: Database["public"]["Enums"]["island"]
+          notes?: string | null
+          organization_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_leaders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          donation_id: string | null
+          fund_leader_id: string
+          id: string
+          receipt_url: string | null
+          recorded_by: string | null
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description: string
+          donation_id?: string | null
+          fund_leader_id: string
+          id?: string
+          receipt_url?: string | null
+          recorded_by?: string | null
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          donation_id?: string | null
+          fund_leader_id?: string
+          id?: string
+          receipt_url?: string | null
+          recorded_by?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_transactions_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_transactions_fund_leader_id_fkey"
+            columns: ["fund_leader_id"]
+            isOneToOne: false
+            referencedRelation: "fund_leader_balances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_transactions_fund_leader_id_fkey"
+            columns: ["fund_leader_id"]
+            isOneToOne: false
+            referencedRelation: "fund_leaders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       news_articles: {
         Row: {
@@ -258,6 +526,44 @@ export type Database = {
           },
         ]
       }
+      org_members: {
+        Row: {
+          clerk_user_id: string
+          created_at: string
+          display_name: string | null
+          id: string
+          organization_id: string
+          role: string
+          share_publicly: boolean
+        }
+        Insert: {
+          clerk_user_id: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          organization_id: string
+          role?: string
+          share_publicly?: boolean
+        }
+        Update: {
+          clerk_user_id?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          organization_id?: string
+          role?: string
+          share_publicly?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           contact_email: string | null
@@ -265,12 +571,15 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_archived: boolean
           islands: Database["public"]["Enums"]["island"][]
           location_lat: number | null
           location_lng: number | null
           mailing_address: string | null
           name: string
+          org_category: Database["public"]["Enums"]["org_category"]
           physical_address: string | null
+          service_hours: Json | null
           service_types: Database["public"]["Enums"]["service_type"][]
           updated_at: string
           user_id: string | null
@@ -284,12 +593,15 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_archived?: boolean
           islands?: Database["public"]["Enums"]["island"][]
           location_lat?: number | null
           location_lng?: number | null
           mailing_address?: string | null
           name: string
+          org_category?: Database["public"]["Enums"]["org_category"]
           physical_address?: string | null
+          service_hours?: Json | null
           service_types?: Database["public"]["Enums"]["service_type"][]
           updated_at?: string
           user_id?: string | null
@@ -303,12 +615,15 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_archived?: boolean
           islands?: Database["public"]["Enums"]["island"][]
           location_lat?: number | null
           location_lng?: number | null
           mailing_address?: string | null
           name?: string
+          org_category?: Database["public"]["Enums"]["org_category"]
           physical_address?: string | null
+          service_hours?: Json | null
           service_types?: Database["public"]["Enums"]["service_type"][]
           updated_at?: string
           user_id?: string | null
@@ -523,16 +838,41 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      fund_leader_balances: {
+        Row: {
+          address: string | null
+          balance: number | null
+          contact_email: string | null
+          display_name: string | null
+          id: string | null
+          intended_services: string | null
+          island: Database["public"]["Enums"]["island"] | null
+          org_name: string | null
+          org_verified: boolean | null
+          status: string | null
+          total_disbursed: number | null
+          total_received: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
+      user_org_ids: { Args: { uid: string }; Returns: string[] }
     }
     Enums: {
       accessible_status: "yes" | "no" | "unsure"
       aid_request_status: "open" | "responding" | "fulfilled" | "unable"
       island: "guam" | "saipan" | "tinian" | "rota"
       offering_status: "active" | "planned" | "closed"
+      org_category:
+        | "uncategorized"
+        | "federal_agency"
+        | "national_ngo"
+        | "local_government"
+        | "local_ngo"
+        | "faith_based"
+        | "community"
       service_type:
         | "shelter"
         | "food"

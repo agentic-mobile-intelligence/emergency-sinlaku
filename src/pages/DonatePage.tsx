@@ -1,41 +1,61 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { ArrowLeft, Heart, Loader2, Send } from "lucide-react"
+import { ArrowLeft, Heart, Loader2, ShieldCheck, DollarSign } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
+import Disclaimer from "@/components/Disclaimer"
+
+const PRESETS = [25, 50, 100, 250]
+
+const ISLAND_LABELS: Record<string, string> = {
+  guam: "Guam",
+  saipan: "Saipan",
+  tinian: "Tinian",
+  rota: "Rota",
+}
 
 export default function DonatePage() {
-  const [name, setName] = useState("")
+  const [preset, setPreset] = useState<number | null>(null)
+  const [custom, setCustom] = useState("")
+  const [earmark, setEarmark] = useState<string>("")
+  const [donorName, setDonorName] = useState("")
   const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [island, setIsland] = useState("")
-  const [amount, setAmount] = useState("")
   const [message, setMessage] = useState("")
+  const [isPublic, setIsPublic] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const amount = preset ?? (parseFloat(custom) || 0)
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return toast.error("Please enter your name.")
-    if (!email.trim() && !phone.trim()) return toast.error("Please provide an email or phone so we can reach you.")
+    if (amount <= 0) return toast.error("Please select or enter an amount.")
     setSubmitting(true)
     try {
-      const { error } = await supabase.from("donation_pledges").insert({
-        name: name.trim(),
-        email: email.trim() || null,
-        phone: phone.trim() || null,
-        island: island || null,
-        amount_pledged: amount.trim() || null,
+      // Find active campaign
+      const { data: campaign } = await supabase
+        .from("donation_campaigns")
+        .select("id")
+        .eq("is_active", true)
+        .limit(1)
+        .single()
+
+      const { error } = await supabase.from("donations").insert({
+        campaign_id: campaign?.id ?? null,
+        amount,
+        donor_name: donorName.trim() || null,
+        donor_email: email.trim() || null,
         message: message.trim() || null,
-      } as any)
+        island_earmark: (earmark as any) || null,
+        is_public: isPublic,
+        status: "pending",
+        payment_method: "other",
+      })
       if (error) throw error
       setSubmitted(true)
     } catch (err) {
@@ -48,106 +68,170 @@ export default function DonatePage() {
 
   if (submitted) {
     return (
-      <div className="min-h-[calc(100vh-88px)] bg-white flex flex-col items-center justify-center px-4 py-12 text-center">
-        <Heart className="w-12 h-12 text-[#DC2626] mb-4" />
-        <h1 className="text-2xl font-bold text-[#1E3A5F] mb-2">Thank You</h1>
-        <p className="text-sm text-gray-600 max-w-sm mb-6">
-          Your pledge has been received. We'll reach out with details on how to donate to the Sinlaku Relief Fund.
+      <div className="min-h-[calc(100vh-88px)] bg-white flex flex-col items-center justify-center px-4 py-12 text-center space-y-5">
+        <Heart className="w-12 h-12 text-[#DC2626]" />
+        <h1 className="text-2xl font-bold text-[#1E3A5F]">Thank You</h1>
+        <p className="text-sm text-gray-600 max-w-sm">
+          Your donation intent of <strong>${amount.toLocaleString()}</strong> has been recorded.
+          Our team will contact you at the email provided with payment instructions.
+          Once confirmed, your donation appears on our public transparency dashboard.
         </p>
-        <Link to="/" className="text-sm text-[#1E3A5F] font-semibold hover:underline">
-          Back to Directory
-        </Link>
+        <div className="flex flex-col gap-2 w-full max-w-xs">
+          <Link
+            to="/transparency"
+            className="bg-[#1E3A5F] text-white font-semibold text-sm px-4 py-3 rounded-lg hover:bg-[#2a4f7a] transition text-center"
+          >
+            View Live Transparency Dashboard →
+          </Link>
+          <Link to="/" className="text-sm text-[#1E3A5F] font-semibold hover:underline">
+            Back to Directory
+          </Link>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="min-h-[calc(100vh-88px)] bg-white">
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
+
         <div className="flex items-center gap-3">
-          <Link to="/" className="text-[#1E3A5F] hover:opacity-70 transition">
+          <Link to="/how-to-help" className="text-[#1E3A5F] hover:opacity-70">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-[#1E3A5F]">Support Sinlaku Relief</h1>
+          <h1 className="text-2xl font-bold text-[#1E3A5F]">Donate to Sinlaku Relief</h1>
         </div>
 
-        <Card className="border-2 border-[#DC2626]/20 bg-[#DC2626]/5">
-          <CardContent className="pt-5 space-y-3">
-            <div className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-[#DC2626]" />
-              <p className="font-semibold text-[#1E3A5F]">General Relief Fund</p>
+        {/* Trust statement */}
+        <div className="flex items-start gap-3 bg-[#1E3A5F]/5 rounded-xl px-4 py-3">
+          <ShieldCheck className="w-5 h-5 text-[#1E3A5F] shrink-0 mt-0.5" />
+          <p className="text-sm text-[#1E3A5F]">
+            Every dollar is tracked publicly. Your donation appears on our{" "}
+            <Link to="/transparency" className="font-semibold underline">live transparency dashboard</Link>{" "}
+            once confirmed — including who received it and what it was used for.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+
+          {/* Amount */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">Amount <span className="text-destructive">*</span></Label>
+            <div className="grid grid-cols-4 gap-2">
+              {PRESETS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => { setPreset(p); setCustom("") }}
+                  className={`rounded-lg border-2 py-3 text-sm font-bold transition ${
+                    preset === p
+                      ? "border-[#1E3A5F] bg-[#1E3A5F] text-white"
+                      : "border-border hover:border-[#1E3A5F] hover:bg-[#1E3A5F]/5"
+                  }`}
+                >
+                  ${p}
+                </button>
+              ))}
             </div>
-            <p className="text-sm text-gray-700">
-              Funds go directly to <strong>Guahan.TECH</strong> for platform operating costs
-              and direct, on-call support for affected communities during and after Supertyphoon Sinlaku.
-            </p>
-            <p className="text-xs text-gray-500">
-              This is not a 501(c)(3). All pledges are completely transparent — we will
-              message every pledger with updates on how funds are used and how to donate.
-            </p>
-          </CardContent>
-        </Card>
+            <Input
+              type="number"
+              min="1"
+              step="1"
+              placeholder="Custom amount ($)"
+              value={custom}
+              onChange={(e) => { setCustom(e.target.value); setPreset(null) }}
+              className="h-11 text-base"
+            />
+          </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base text-[#1E3A5F]">Pledge to Donate</CardTitle>
-            <p className="text-xs text-gray-500">
-              Fill out this form to pledge your support. We'll contact you with donation details.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="pledge-name">Your name <span className="text-destructive">*</span></Label>
-                <Input id="pledge-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Maria" required />
-              </div>
+          {/* Earmark */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">
+              Direct funds to an island{" "}
+              <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              {(["", "guam", "saipan", "tinian", "rota"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setEarmark(v)}
+                  className={`rounded-lg border-2 py-2.5 text-sm font-semibold transition ${
+                    earmark === v
+                      ? "border-[#1E3A5F] bg-[#1E3A5F] text-white"
+                      : "border-border hover:border-[#1E3A5F] hover:bg-[#1E3A5F]/5"
+                  }`}
+                >
+                  {v === "" ? "General Relief" : ISLAND_LABELS[v]}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="pledge-email">Email</Label>
-                  <Input id="pledge-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="pledge-phone">Phone</Label>
-                  <Input id="pledge-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 671 555-0100" />
-                </div>
-              </div>
+          {/* Donor info */}
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">
+              Your info{" "}
+              <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+            </Label>
+            <Input
+              placeholder="Your name (or leave blank to donate anonymously)"
+              value={donorName}
+              onChange={(e) => setDonorName(e.target.value)}
+              className="h-11"
+            />
+            <Input
+              type="email"
+              placeholder="Email for payment instructions"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-11"
+            />
+            <Textarea
+              placeholder="Message (optional)"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={2}
+            />
+          </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Island</Label>
-                  <Select value={island} onValueChange={setIsland}>
-                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="guam">Guam</SelectItem>
-                      <SelectItem value="saipan">Saipan</SelectItem>
-                      <SelectItem value="tinian">Tinian</SelectItem>
-                      <SelectItem value="rota">Rota</SelectItem>
-                      <SelectItem value="other">Other / Off-Island</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="pledge-amount">Amount (optional)</Label>
-                  <Input id="pledge-amount" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. $50, whatever I can" />
-                </div>
-              </div>
+          {/* Public toggle */}
+          <label className="flex items-center gap-3 rounded-xl border-2 border-border px-4 py-3 cursor-pointer hover:bg-gray-50 transition has-[:checked]:border-[#1E3A5F] has-[:checked]:bg-[#1E3A5F]/5">
+            <input
+              type="checkbox"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+              className="w-4 h-4 shrink-0"
+            />
+            <div>
+              <p className="text-sm font-medium">Show my name on the public dashboard</p>
+              <p className="text-xs text-muted-foreground">Unchecked = "Anonymous" on the transparency page</p>
+            </div>
+          </label>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="pledge-message">Message (optional)</Label>
-                <Textarea id="pledge-message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Any message for the team..." rows={3} />
-              </div>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full h-14 text-base bg-[#DC2626] hover:bg-red-700"
+            disabled={submitting || amount <= 0}
+          >
+            {submitting
+              ? <Loader2 className="w-5 h-5 animate-spin" />
+              : <><DollarSign className="w-5 h-5 mr-1" /> Record Donation Intent {amount > 0 ? `— $${amount.toLocaleString()}` : ""}</>
+            }
+          </Button>
 
-              <Button type="submit" disabled={submitting} className="w-full text-white" style={{ backgroundColor: "#DC2626" }}>
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4 mr-2" /> Submit Pledge</>}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+          {/* Disclaimer */}
+          <Disclaimer />
 
-        <p className="text-xs text-gray-400 text-center">
-          Questions? Contact <a href="https://wa.me/16716887638" className="text-[#1E3A5F] underline">+1 671 688 7638</a> or <a href="mailto:admin@guahan.tech" className="text-[#1E3A5F] underline">admin@guahan.tech</a>
-        </p>
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="pt-4 pb-4 text-xs text-amber-900 space-y-1">
+              <p className="font-semibold">Payment instructions:</p>
+              <p>After submitting, our team will email you Zelle / PayPal / bank transfer details within 24 hours. We are not yet set up for direct card processing. Your donation is recorded immediately for transparency.</p>
+              <p>Questions: <a href="mailto:admin@guahan.tech" className="underline">admin@guahan.tech</a> · <a href="https://wa.me/16716887638" className="underline">WhatsApp</a></p>
+            </CardContent>
+          </Card>
+        </form>
       </div>
     </div>
   )

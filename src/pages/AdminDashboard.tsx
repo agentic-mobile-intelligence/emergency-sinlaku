@@ -20,10 +20,22 @@ import {
 import { useAuth } from "@/hooks/useAuth"
 import { useUserRole } from "@/contexts/UserRoleContext"
 import type { Database } from "@/lib/database.types"
+import OrgBadge from "@/components/OrgBadge"
 
 type Island = Database["public"]["Enums"]["island"]
 type ServiceType = Database["public"]["Enums"]["service_type"]
+type OrgCategory = Database["public"]["Enums"]["org_category"]
 type VolunteerSkill = Database["public"]["Enums"]["volunteer_skill"]
+
+const ORG_CATEGORY_OPTIONS: { value: OrgCategory; label: string }[] = [
+  { value: "uncategorized", label: "Uncategorized" },
+  { value: "federal_agency", label: "Federal Agency (e.g. FEMA)" },
+  { value: "national_ngo", label: "National NGO (e.g. Red Cross)" },
+  { value: "local_government", label: "Gov. Agency (GovGuam / CNMI)" },
+  { value: "local_ngo", label: "Local NGO / Nonprofit" },
+  { value: "faith_based", label: "Faith-Based Organization" },
+  { value: "community", label: "Community Group" },
+]
 
 const ISLANDS: Island[] = ["guam", "saipan", "tinian", "rota"]
 const SERVICE_TYPES: ServiceType[] = [
@@ -146,7 +158,7 @@ function OrgsTab() {
     queryFn: async () => {
       const { data, error } = await supabaseClient
         .from("organizations")
-        .select("id, name, contact_phone, contact_email, whatsapp, islands, service_types, verified, verification_requested, created_at")
+        .select("id, name, contact_phone, contact_email, whatsapp, islands, service_types, verified, verification_requested, org_category, created_at")
         .order("verification_requested", { ascending: false })
         .order("created_at", { ascending: false })
       if (error) throw error
@@ -165,6 +177,15 @@ function OrgsTab() {
     setUpdating(null)
   }
 
+  async function updateCategory(id: string, category: OrgCategory) {
+    const { error } = await supabaseClient
+      .from("organizations")
+      .update({ org_category: category })
+      .eq("id", id)
+    if (error) toast.error("Category update failed: " + error.message)
+    else { toast.success("Category updated."); refetch() }
+  }
+
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>
 
   const queue = orgs?.filter((o) => o.verification_requested && !o.verified) ?? []
@@ -176,12 +197,13 @@ function OrgsTab() {
       <Card className={`border ${org.verified ? "border-green-500/30 bg-green-500/5" : org.verification_requested ? "border-yellow-500/40 bg-yellow-500/5" : ""}`}>
         <CardContent className="px-4 py-3 space-y-2">
           <div className="flex items-start justify-between gap-3">
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 flex-1 min-w-0">
               <p className="font-semibold text-sm">{org.name}</p>
               <p className="text-xs text-muted-foreground">
                 {org.contact_phone}{org.contact_email ? ` · ${org.contact_email}` : ""}{org.whatsapp ? ` · WA: ${org.whatsapp}` : ""}
               </p>
               <div className="flex flex-wrap gap-1 pt-0.5">
+                <OrgBadge category={(org.org_category as OrgCategory) ?? "uncategorized"} verified={org.verified} size="sm" />
                 {(org.islands as Island[]).map((i) => (
                   <Badge key={i} variant="outline" className="text-xs">{ISLAND_LABELS[i]}</Badge>
                 ))}
@@ -199,7 +221,22 @@ function OrgsTab() {
               }
             </div>
           </div>
-          <div className="flex justify-end">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select
+              value={(org.org_category as OrgCategory) ?? "uncategorized"}
+              onValueChange={(v) => updateCategory(org.id, v as OrgCategory)}
+            >
+              <SelectTrigger className="h-7 text-xs w-52">
+                <SelectValue placeholder="Set category…" />
+              </SelectTrigger>
+              <SelectContent>
+                {ORG_CATEGORY_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               size="sm"
               variant={org.verified ? "outline" : "default"}
@@ -624,6 +661,418 @@ function AnnouncementsTab() {
   )
 }
 
+// ── Funds tab ─────────────────────────────────────────────────────────────────
+
+function FundsTab() {
+  const { supabaseClient, user } = useAuth()
+  const [approvingLeader, setApprovingLeader] = useState<string | null>(null)
+  const [savingDonation, setSavingDonation] = useState(false)
+  const [savingTxn, setSavingTxn] = useState(false)
+  const [donationForm, setDonationForm] = useState({ amount: "", donor_name: "", donor_email: "", island_earmark: "", status: "confirmed", payment_method: "other", message: "" })
+  const [txnForm, setTxnForm] = useState({ fund_leader_id: "", amount: "", type: "allocation", description: "", receipt_url: "" })
+
+  const { data: leaders, isLoading: loadingLeaders, refetch: refetchLeaders } = useQuery({
+    queryKey: ["admin", "fund_leaders"],
+    queryFn: async () => {
+      const { data, error } = await supabaseClient
+        .from("fund_leaders")
+        .select("*, organizations(name)")
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return data as any[]
+    },
+  })
+
+  const { data: donations, isLoading: loadingDonations, refetch: refetchDonations } = useQuery({
+    queryKey: ["admin", "donations"],
+    queryFn: async () => {
+      const { data, error } = await supabaseClient
+        .from("donations")
+        .select("id, amount, donor_name, donor_email, status, payment_method, island_earmark, message, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50)
+      if (error) throw error
+      return data as any[]
+    },
+  })
+
+  const { data: txnStats } = useQuery({
+    queryKey: ["admin", "fund_transaction_stats"],
+    queryFn: async () => {
+      const { data, error } = await supabaseClient
+        .from("fund_transactions")
+        .select("amount, type, receipt_url")
+      if (error) throw error
+      const allocated = (data ?? []).filter(t => t.type === "allocation").reduce((s, t) => s + Number(t.amount), 0)
+      const disbursed = (data ?? []).filter(t => t.type === "disbursement").reduce((s, t) => s + Math.abs(Number(t.amount)), 0)
+      const disbursedWithReceipt = (data ?? []).filter(t => t.type === "disbursement" && t.receipt_url).reduce((s, t) => s + Math.abs(Number(t.amount)), 0)
+      return { allocated, disbursed, disbursedWithReceipt, disbursedWithoutReceipt: disbursed - disbursedWithReceipt }
+    },
+  })
+
+  const totalConfirmed = (donations ?? []).filter((d) => d.status === "confirmed").reduce((s: number, d: any) => s + Number(d.amount), 0)
+  const totalPending = (donations ?? []).filter((d) => d.status === "pending").reduce((s: number, d: any) => s + Number(d.amount), 0)
+  const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(n)
+
+  async function approveLeader(id: string, status: "approved" | "suspended") {
+    setApprovingLeader(id)
+    const { error } = await supabaseClient
+      .from("fund_leaders")
+      .update({
+        status,
+        approved_at: status === "approved" ? new Date().toISOString() : null,
+        approved_by: user?.id ?? null,
+      })
+      .eq("id", id)
+    if (error) toast.error("Update failed: " + error.message)
+    else { toast.success(status === "approved" ? "Fund leader approved." : "Suspended."); refetchLeaders() }
+    setApprovingLeader(null)
+  }
+
+  async function confirmDonation(id: string) {
+    const { error } = await supabaseClient.from("donations").update({ status: "confirmed" }).eq("id", id)
+    if (error) toast.error("Failed.")
+    else { toast.success("Donation confirmed."); refetchDonations() }
+  }
+
+  async function addDonation() {
+    if (!donationForm.amount || isNaN(parseFloat(donationForm.amount))) return toast.error("Valid amount required.")
+    setSavingDonation(true)
+    const { data: campaign } = await supabaseClient.from("donation_campaigns").select("id").eq("is_active", true).limit(1).single()
+    const { error } = await supabaseClient.from("donations").insert({
+      campaign_id: campaign?.id ?? null,
+      amount: parseFloat(donationForm.amount),
+      donor_name: donationForm.donor_name.trim() || null,
+      donor_email: donationForm.donor_email.trim() || null,
+      island_earmark: (donationForm.island_earmark as any) || null,
+      message: donationForm.message.trim() || null,
+      status: donationForm.status,
+      payment_method: donationForm.payment_method,
+      is_public: true,
+    })
+    if (error) toast.error("Failed: " + error.message)
+    else {
+      toast.success("Donation recorded.")
+      setDonationForm({ amount: "", donor_name: "", donor_email: "", island_earmark: "", status: "confirmed", payment_method: "other", message: "" })
+      refetchDonations()
+    }
+    setSavingDonation(false)
+  }
+
+  async function addTransaction() {
+    if (!txnForm.fund_leader_id) return toast.error("Select a fund leader.")
+    if (!txnForm.amount || isNaN(parseFloat(txnForm.amount))) return toast.error("Valid amount required.")
+    if (!txnForm.description.trim()) return toast.error("Description required.")
+    setSavingTxn(true)
+    const { error } = await supabaseClient.from("fund_transactions").insert({
+      fund_leader_id: txnForm.fund_leader_id,
+      amount: parseFloat(txnForm.amount),
+      type: txnForm.type,
+      description: txnForm.description.trim(),
+      receipt_url: txnForm.receipt_url.trim() || null,
+      recorded_by: user?.id ?? null,
+    })
+    if (error) toast.error("Failed: " + error.message)
+    else {
+      toast.success("Transaction recorded.")
+      setTxnForm({ fund_leader_id: "", amount: "", type: "allocation", description: "", receipt_url: "" })
+    }
+    setSavingTxn(false)
+  }
+
+  const approvedLeaders = (leaders ?? []).filter((l) => l.status === "approved")
+
+  return (
+    <div className="space-y-10">
+
+      {/* Summary */}
+      <section>
+        <h2 className="text-base font-semibold mb-3">Donation Summary</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <Card className="border-green-200"><CardContent className="pt-4 pb-3"><p className="text-xs text-muted-foreground">Confirmed</p><p className="text-xl font-bold text-green-700">{fmt(totalConfirmed)}</p></CardContent></Card>
+          <Card className="border-amber-200"><CardContent className="pt-4 pb-3"><p className="text-xs text-muted-foreground">Pending Confirmation</p><p className="text-xl font-bold text-amber-600">{fmt(totalPending)}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><p className="text-xs text-muted-foreground">Total Records</p><p className="text-xl font-bold">{donations?.length ?? 0}</p></CardContent></Card>
+        </div>
+      </section>
+
+      {/* Allocation & Audit Analytics */}
+      {txnStats && (
+        <section>
+          <h2 className="text-base font-semibold mb-3">Fund Allocation & Audit</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Card className="border-blue-200"><CardContent className="pt-4 pb-3"><p className="text-xs text-muted-foreground">Allocated to Leaders</p><p className="text-xl font-bold text-blue-700">{fmt(txnStats.allocated)}</p></CardContent></Card>
+            <Card className="border-amber-200"><CardContent className="pt-4 pb-3"><p className="text-xs text-muted-foreground">Unallocated</p><p className="text-xl font-bold text-amber-600">{fmt(totalConfirmed - txnStats.allocated)}</p></CardContent></Card>
+            <Card className="border-green-200"><CardContent className="pt-4 pb-3"><p className="text-xs text-muted-foreground">Disbursed (with receipt)</p><p className="text-xl font-bold text-green-700">{fmt(txnStats.disbursedWithReceipt)}</p></CardContent></Card>
+            <Card className="border-orange-200"><CardContent className="pt-4 pb-3"><p className="text-xs text-muted-foreground">Disbursed (no receipt)</p><p className="text-xl font-bold text-orange-600">{fmt(txnStats.disbursedWithoutReceipt)}</p></CardContent></Card>
+          </div>
+        </section>
+      )}
+
+      {/* Fund Leader Management */}
+      <section>
+        <h2 className="text-base font-semibold mb-3">Fund Leader Management</h2>
+        {loadingLeaders ? <p className="text-sm text-muted-foreground">Loading…</p> : (leaders?.length ?? 0) === 0 ? (
+          <p className="text-sm text-muted-foreground">No applications yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {/* Pending queue */}
+            {(leaders ?? []).filter(l => l.status === "pending").length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-amber-700 mb-2">Pending Approval ({(leaders ?? []).filter(l => l.status === "pending").length})</h3>
+                <div className="space-y-2">
+                  {(leaders ?? []).filter(l => l.status === "pending").map((l) => (
+                    <Card key={l.id} className="border-2 border-amber-300 bg-amber-50/50">
+                      <CardContent className="px-4 py-3 space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-sm">{l.display_name}</p>
+                              <Badge variant="outline" className="text-xs text-amber-700 border-amber-400">Pending</Badge>
+                              <Badge variant="outline" className="text-xs">{ISLAND_LABELS[l.island as Island] ?? l.island}</Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{l.organizations?.name}</p>
+                            <p className="text-xs text-muted-foreground">{l.address}</p>
+                            <div className="flex gap-3 text-xs text-muted-foreground">
+                              {l.contact_email && <span>{l.contact_email}</span>}
+                              {l.contact_phone && <span>{l.contact_phone}</span>}
+                            </div>
+                            {l.intended_services && (
+                              <div className="mt-1 bg-white rounded px-2 py-1.5 border text-xs">
+                                <span className="font-medium text-muted-foreground">Intended use: </span>{l.intended_services}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            <Button size="sm" className="h-7 text-xs bg-green-700 hover:bg-green-800"
+                              disabled={approvingLeader === l.id}
+                              onClick={() => approveLeader(l.id, "approved")}>Approve</Button>
+                            <Button size="sm" variant="destructive" className="h-7 text-xs"
+                              disabled={approvingLeader === l.id}
+                              onClick={() => approveLeader(l.id, "suspended")}>Reject</Button>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Applied {new Date(l.created_at).toLocaleDateString()}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Approved */}
+            {(leaders ?? []).filter(l => l.status === "approved").length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-green-700 mb-2">Approved ({(leaders ?? []).filter(l => l.status === "approved").length})</h3>
+                <div className="space-y-2">
+                  {(leaders ?? []).filter(l => l.status === "approved").map((l) => (
+                    <Card key={l.id} className="border border-green-200">
+                      <CardContent className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-medium text-sm">{l.display_name}</p>
+                            <Badge className="text-xs bg-green-700">Approved</Badge>
+                            <Badge variant="outline" className="text-xs">{ISLAND_LABELS[l.island as Island] ?? l.island}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{l.organizations?.name} · {l.address}</p>
+                          {l.intended_services && <p className="text-xs text-muted-foreground italic">{l.intended_services}</p>}
+                        </div>
+                        <Button size="sm" variant="destructive" className="h-7 text-xs shrink-0"
+                          disabled={approvingLeader === l.id}
+                          onClick={() => approveLeader(l.id, "suspended")}>Suspend</Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Suspended */}
+            {(leaders ?? []).filter(l => l.status === "suspended").length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-red-600 mb-2">Suspended ({(leaders ?? []).filter(l => l.status === "suspended").length})</h3>
+                <div className="space-y-2">
+                  {(leaders ?? []).filter(l => l.status === "suspended").map((l) => (
+                    <Card key={l.id} className="border border-border opacity-60">
+                      <CardContent className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">{l.display_name}</p>
+                            <Badge variant="destructive" className="text-xs">Suspended</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{l.organizations?.name} · {ISLAND_LABELS[l.island as Island] ?? l.island}</p>
+                        </div>
+                        <Button size="sm" className="h-7 text-xs bg-green-700 hover:bg-green-800 shrink-0"
+                          disabled={approvingLeader === l.id}
+                          onClick={() => approveLeader(l.id, "approved")}>Re-approve</Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* Record a Donation */}
+      <section>
+        <h2 className="text-base font-semibold mb-3">Record a Donation (offline / manual)</h2>
+        <Card>
+          <CardContent className="pt-5 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Amount ($) <span className="text-destructive">*</span></Label>
+                <Input placeholder="100" value={donationForm.amount} onChange={(e) => setDonationForm(p => ({ ...p, amount: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Payment method</Label>
+                <Select value={donationForm.payment_method} onValueChange={(v) => setDonationForm(p => ({ ...p, payment_method: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="check">Check</SelectItem>
+                    <SelectItem value="zelle">Zelle</SelectItem>
+                    <SelectItem value="paypal">PayPal</SelectItem>
+                    <SelectItem value="wire">Wire</SelectItem>
+                    <SelectItem value="stripe">Stripe</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Donor name (optional)</Label>
+                <Input placeholder="Anonymous" value={donationForm.donor_name} onChange={(e) => setDonationForm(p => ({ ...p, donor_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Donor email (optional)</Label>
+                <Input type="email" placeholder="donor@example.com" value={donationForm.donor_email} onChange={(e) => setDonationForm(p => ({ ...p, donor_email: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Island earmark</Label>
+                <Select value={donationForm.island_earmark} onValueChange={(v) => setDonationForm(p => ({ ...p, island_earmark: v }))}>
+                  <SelectTrigger><SelectValue placeholder="General" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">General</SelectItem>
+                    <SelectItem value="guam">Guam</SelectItem>
+                    <SelectItem value="saipan">Saipan</SelectItem>
+                    <SelectItem value="tinian">Tinian</SelectItem>
+                    <SelectItem value="rota">Rota</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Status</Label>
+                <Select value={donationForm.status} onValueChange={(v) => setDonationForm(p => ({ ...p, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Message / notes</Label>
+              <Input placeholder="Any notes" value={donationForm.message} onChange={(e) => setDonationForm(p => ({ ...p, message: e.target.value }))} />
+            </div>
+            <Button onClick={addDonation} disabled={savingDonation} className="bg-[#1E3A5F]">
+              {savingDonation ? <Loader2 className="h-4 w-4 animate-spin" /> : "Record Donation"}
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Record a Transaction */}
+      <section>
+        <h2 className="text-base font-semibold mb-3">Record Fund Transaction (allocation / disbursement)</h2>
+        <Card>
+          <CardContent className="pt-5 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Fund Leader <span className="text-destructive">*</span></Label>
+                <Select value={txnForm.fund_leader_id} onValueChange={(v) => setTxnForm(p => ({ ...p, fund_leader_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select leader…" /></SelectTrigger>
+                  <SelectContent>
+                    {approvedLeaders.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>{l.display_name} ({ISLAND_LABELS[l.island as Island] ?? l.island})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Type <span className="text-destructive">*</span></Label>
+                <Select value={txnForm.type} onValueChange={(v) => setTxnForm(p => ({ ...p, type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="allocation">Allocation (funds sent to leader)</SelectItem>
+                    <SelectItem value="disbursement">Disbursement (spent on relief)</SelectItem>
+                    <SelectItem value="return">Return (funds returned)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Amount ($) <span className="text-destructive">*</span></Label>
+                <Input placeholder="500" value={txnForm.amount} onChange={(e) => setTxnForm(p => ({ ...p, amount: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Receipt URL (optional)</Label>
+                <Input placeholder="https://…" value={txnForm.receipt_url} onChange={(e) => setTxnForm(p => ({ ...p, receipt_url: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Description <span className="text-destructive">*</span></Label>
+              <Input placeholder="Food distribution supplies — Dededo shelter, April 15" value={txnForm.description} onChange={(e) => setTxnForm(p => ({ ...p, description: e.target.value }))} />
+            </div>
+            <Button onClick={addTransaction} disabled={savingTxn} className="bg-[#1E3A5F]">
+              {savingTxn ? <Loader2 className="h-4 w-4 animate-spin" /> : "Record Transaction"}
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Donation log */}
+      <section>
+        <h2 className="text-base font-semibold mb-3">Donation Log</h2>
+        {loadingDonations ? <p className="text-sm text-muted-foreground">Loading…</p> : (
+          <div className="space-y-2">
+            {(donations ?? []).map((d) => (
+              <Card key={d.id} className="border border-border">
+                <CardContent className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">{d.donor_name ?? "Anonymous"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {d.payment_method} · {d.island_earmark ? ISLAND_LABELS[d.island_earmark as Island] ?? d.island_earmark : "General"}
+                      {" "}· {new Date(d.created_at).toLocaleDateString()}
+                    </p>
+                    {d.donor_email && <p className="text-xs text-muted-foreground">{d.donor_email}</p>}
+                  </div>
+                  <div className="text-right shrink-0 flex items-center gap-3">
+                    <div>
+                      <p className="font-bold">${Number(d.amount).toLocaleString()}</p>
+                      <Badge variant={d.status === "confirmed" ? "default" : d.status === "pending" ? "outline" : "destructive"} className="text-xs">
+                        {d.status}
+                      </Badge>
+                    </div>
+                    {d.status === "pending" && (
+                      <Button size="sm" className="h-7 text-xs bg-green-700 hover:bg-green-800" onClick={() => confirmDonation(d.id)}>
+                        Confirm
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}
+
 // ── News tab ─────────────────────────────────────────────────────────────────
 
 function NewsTab() {
@@ -894,10 +1343,11 @@ export default function AdminDashboard() {
 
       <main className="max-w-5xl mx-auto px-4 py-8">
         <Tabs defaultValue="overview">
-          <TabsList className="mb-6 grid grid-cols-6 w-full max-w-2xl">
+          <TabsList className="mb-6 flex flex-wrap gap-1 h-auto w-full max-w-3xl">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="organizations">Orgs</TabsTrigger>
             <TabsTrigger value="volunteers">Volunteers</TabsTrigger>
+            <TabsTrigger value="funds">Funds</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="news">News</TabsTrigger>
             <TabsTrigger value="announcements">Alerts</TabsTrigger>
@@ -906,6 +1356,7 @@ export default function AdminDashboard() {
           <TabsContent value="overview"><OverviewTab /></TabsContent>
           <TabsContent value="organizations"><OrgsTab /></TabsContent>
           <TabsContent value="volunteers"><VolunteersTab /></TabsContent>
+          <TabsContent value="funds"><FundsTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
           <TabsContent value="news"><NewsTab /></TabsContent>
           <TabsContent value="announcements"><AnnouncementsTab /></TabsContent>

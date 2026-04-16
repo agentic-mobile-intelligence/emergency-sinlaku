@@ -18,8 +18,9 @@ import {
 import { supabase } from "@/lib/supabase"
 import type { Tables } from "@/lib/database.types"
 import { Constants } from "@/lib/database.types"
+import OrgBadge from "@/components/OrgBadge"
 
-type Offering = Tables<"offerings"> & { organizations: Pick<Tables<"organizations">, "name" | "contact_phone" | "verified"> }
+type Offering = Tables<"offerings"> & { organizations: Pick<Tables<"organizations">, "name" | "contact_phone" | "verified" | "org_category"> }
 
 const BRAND = "#1E3A5F"
 
@@ -59,6 +60,40 @@ function createPinIcon(color: string) {
   })
 }
 
+// Unverified org pin — gray outline with dashed border, "?" center
+function createUnverifiedOrgIcon() {
+  return L.divIcon({
+    className: "",
+    html: `<div style="
+      width:26px;height:26px;border-radius:50%;
+      background:#f9fafb;border:2px dashed #9ca3af;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 1px 4px rgba(0,0,0,0.18);
+      font-size:13px;font-weight:700;color:#6b7280;
+    ">?</div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -16],
+  })
+}
+
+// Verified org pin — solid navy with building icon
+function createVerifiedOrgIcon() {
+  return L.divIcon({
+    className: "",
+    html: `<div style="
+      width:26px;height:26px;border-radius:50%;
+      background:#1E3A5F;border:2px solid white;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 1px 4px rgba(0,0,0,0.25);
+      font-size:12px;
+    ">🏢</div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -16],
+  })
+}
+
 function FlyToIsland({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap()
   useEffect(() => {
@@ -87,7 +122,7 @@ export default function IslandPage() {
     setLoading(true)
     supabase
       .from("offerings")
-      .select("*, organizations(name, contact_phone, verified)")
+      .select("*, organizations(name, contact_phone, verified, org_category)")
       .eq("island", island as any)
       .then(({ data, error }) => {
         if (!error && data) setOfferings(data as Offering[])
@@ -96,7 +131,7 @@ export default function IslandPage() {
     // Fetch orgs that serve this island (for registered providers section)
     supabase
       .from("organizations")
-      .select("id, name, contact_phone, contact_email, service_types, verified, is_archived")
+      .select("id, name, contact_phone, contact_email, service_types, verified, org_category, is_archived, location_lat, location_lng, physical_address")
       .contains("islands", [island])
       .then(({ data }) => {
         setOrgs((data ?? []).filter((o: any) => !o.is_archived))
@@ -304,8 +339,11 @@ export default function IslandPage() {
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <Clock className="h-3 w-3" />{o.hours_text}
                     </div>
-                    {o.organizations?.verified && (
-                      <span className="text-[10px] text-green-700 font-medium">Verified</span>
+                    {o.organizations && (
+                      <OrgBadge
+                        category={o.organizations.org_category ?? "uncategorized"}
+                        verified={o.organizations.verified}
+                      />
                     )}
                   </CardContent>
                 </Card>
@@ -376,13 +414,11 @@ export default function IslandPage() {
                           <Shield className="w-3.5 h-3.5 text-gray-400" />
                         )}
                       </div>
+                      <OrgBadge category={org.org_category ?? "uncategorized"} verified={org.verified} />
                       {org.contact_phone && (
-                        <a href={`tel:${org.contact_phone}`} className="text-blue-600 hover:underline block">
+                        <a href={`tel:${org.contact_phone}`} className="text-blue-600 hover:underline block mt-1">
                           {org.contact_phone}
                         </a>
-                      )}
-                      {!org.verified && (
-                        <p className="text-gray-400 mt-1 italic">Unverified</p>
                       )}
                     </div>
                   ))}
@@ -411,8 +447,10 @@ export default function IslandPage() {
             />
             <FlyToIsland center={meta.center} zoom={meta.zoom} />
 
+            {/* Offering pins (colored by service type) */}
             {filtered.map((o) => {
               if (!o.location_lat || !o.location_lng) return null
+              const isOrgVerified = o.organizations?.verified ?? false
               return (
                 <Marker
                   key={o.id}
@@ -422,6 +460,11 @@ export default function IslandPage() {
                 >
                   <Popup>
                     <div className="text-sm space-y-1">
+                      {!isOrgVerified && (
+                        <div style={{ background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 4, padding: "2px 6px", fontSize: 11, color: "#92400e", fontWeight: 600 }}>
+                          ⚠️ Unverified organization
+                        </div>
+                      )}
                       <div className="font-bold">{o.name}</div>
                       <div className="text-gray-600">{o.organizations?.name}</div>
                       <div className="capitalize">{o.service_type} &middot; {o.status}</div>
@@ -437,6 +480,35 @@ export default function IslandPage() {
                 </Marker>
               )
             })}
+
+            {/* Organization location pins — shown even for unverified orgs */}
+            {orgs
+              .filter((org) => org.location_lat && org.location_lng)
+              .map((org) => (
+                <Marker
+                  key={`org-${org.id}`}
+                  position={[org.location_lat, org.location_lng]}
+                  icon={org.verified ? createVerifiedOrgIcon() : createUnverifiedOrgIcon()}
+                >
+                  <Popup>
+                    <div className="text-sm space-y-1">
+                      {!org.verified && (
+                        <div style={{ background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 4, padding: "2px 6px", fontSize: 11, color: "#92400e", fontWeight: 600 }}>
+                          ⚠️ Unverified — info may not be confirmed
+                        </div>
+                      )}
+                      <div className="font-bold">{org.name}</div>
+                      {org.physical_address && <div className="text-gray-600">{org.physical_address}</div>}
+                      {org.contact_phone && (
+                        <a href={`tel:${org.contact_phone}`} className="flex items-center gap-1 text-blue-600">
+                          <Phone className="h-3 w-3" />{org.contact_phone}
+                        </a>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))
+            }
           </MapContainer>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom"
+import { useState } from "react"
 import { Toaster } from "@/components/ui/sonner"
 import EmergencyBanner from "@/components/EmergencyBanner"
 import StickyHeader from "@/components/StickyHeader"
@@ -22,7 +23,14 @@ import OrgMembersPage from "@/pages/OrgMembersPage"
 import DonatePage from "@/pages/DonatePage"
 import ArchivedOrgsPage from "@/pages/ArchivedOrgsPage"
 import AnnouncementBanner from "@/components/AnnouncementBanner"
+import GovOfficialsBanner from "@/components/GovOfficialsBanner"
 import VolunteerStats from "@/components/VolunteerStats"
+import Disclaimer from "@/components/Disclaimer"
+import HowToHelpPage from "@/pages/HowToHelpPage"
+import TransparencyPage from "@/pages/TransparencyPage"
+import InstructionsPage from "@/pages/InstructionsPage"
+import GovOfficialsPage from "@/pages/GovOfficialsPage"
+import FundLeaderApplyPage from "@/pages/FundLeaderApplyPage"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -32,12 +40,21 @@ const toasterProps = {
 }
 
 function LandingPage() {
+  const [govBannerDismissed, setGovBannerDismissed] = useState(false)
+
   return (
     <div className="min-h-[calc(100vh-88px)] bg-white flex flex-col items-center justify-center p-6">
       {/* Announcement banner — above title */}
-      <div className="w-full max-w-md mb-4">
+      <div className="w-full max-w-md mb-2">
         <AnnouncementBanner />
       </div>
+
+      {/* Gov officials yellow banner — dismissible, resets on navigation */}
+      {!govBannerDismissed && (
+        <div className="w-full max-w-md mb-4">
+          <GovOfficialsBanner onDismiss={() => setGovBannerDismissed(true)} />
+        </div>
+      )}
 
       <h1 className="text-3xl font-bold text-[#1E3A5F] mb-2 text-center">
         Mariana Islands Emergency Relief Directory
@@ -91,13 +108,34 @@ function LandingPage() {
         </Link>
       </div>
 
+      {/* How to Help / Donate CTA */}
+      <div className="mt-3 w-full max-w-md flex gap-2">
+        <Link
+          to="/how-to-help"
+          className="flex-1 flex items-center justify-between bg-green-700 text-white font-bold text-sm rounded-lg px-4 py-3 hover:bg-green-800 transition"
+        >
+          <span>💚 How to Help</span>
+          <span className="text-white/80">→</span>
+        </Link>
+        <Link
+          to="/instructions"
+          className="flex items-center justify-between border-2 border-[#1E3A5F] text-[#1E3A5F] font-bold text-sm rounded-lg px-4 py-3 hover:bg-[#1E3A5F]/5 transition"
+        >
+          <span>ℹ️ Instructions</span>
+          <span className="text-[#1E3A5F]/60 ml-2">→</span>
+        </Link>
+      </div>
+
       {/* Volunteer stats — aggregate only, no PII */}
       <div className="mt-4">
         <VolunteerStats />
       </div>
 
-      {/* Footer */}
-      <div className="mt-16 pt-6 border-t border-gray-100 w-full max-w-md text-center text-xs text-gray-400 space-y-1">
+      {/* Disclaimer + Footer */}
+      <div className="mt-12 w-full max-w-md">
+        <Disclaimer variant="condensed" />
+      </div>
+      <div className="mt-6 pt-6 border-t border-gray-100 w-full max-w-md text-center text-xs text-gray-400 space-y-1">
         <p>Built by Guåhan.TECH for the Mariana Islands community.</p>
         <p>
           Want to help improve this app?{" "}
@@ -146,7 +184,12 @@ function App() {
           <Route path="/emergency-contacts" element={<EmergencyContactsPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/donate" element={<DonatePage />} />
+          <Route path="/how-to-help" element={<HowToHelpPage />} />
+          <Route path="/transparency" element={<TransparencyPage />} />
           <Route path="/provider/archived" element={<ArchivedOrgsPage />} />
+          <Route path="/instructions" element={<InstructionsPage />} />
+          <Route path="/gov-officials" element={<GovOfficialsPage />} />
+          <Route path="/fund-leader/apply" element={<FundLeaderApplyPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />

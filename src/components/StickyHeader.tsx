@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Home, Plus, ClipboardList, Building2, Star } from "lucide-react"
+import { Home, Heart, Plus, ClipboardList, Building2, Star, Info } from "lucide-react"
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react"
 import {
   DropdownMenu,
@@ -29,6 +29,24 @@ export default function StickyHeader() {
           )}
           <Link to="/" className="font-bold text-sm tracking-wide hidden sm:block">
             Sinlaku Relief Directory
+          </Link>
+        </div>
+
+        {/* Center: Instructions + How to Help */}
+        <div className="flex items-center gap-2">
+          <Link
+            to="/instructions"
+            className="flex items-center gap-1.5 border border-white/50 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-white/10 transition"
+          >
+            <Info className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Instructions</span>
+          </Link>
+          <Link
+            to="/how-to-help"
+            className="flex items-center gap-1.5 bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 transition"
+          >
+            <Heart className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">How to Help</span>
           </Link>
         </div>
 
