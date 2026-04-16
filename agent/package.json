@@ -1,0 +1,20 @@
+{
+  "name": "sinlaku-error-detection-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Claude-powered agent that scans the emergency-sinlaku codebase for application errors",
+  "scripts": {
+    "start": "bun run index.ts",
+    "analyze": "bun run index.ts",
+    "analyze:json": "bun run index.ts --json"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "bun-types": "latest",
+    "typescript": "^5.9.3"
+  }
+}
