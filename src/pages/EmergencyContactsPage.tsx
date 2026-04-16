@@ -251,7 +251,7 @@ export default function EmergencyContactsPage() {
         {/* Legend */}
         <div className="flex items-center gap-4 text-xs text-gray-500">
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> Confirmed from official source</span>
-          <span className="flex items-center gap-1"><Flag className="w-3.5 h-3.5 text-orange-500" /> Unverified — tap to suggest update</span>
+          <span className="flex items-center gap-1"><Flag className="w-3.5 h-3.5 text-orange-500" /> Unverified — tap to request phone number</span>
         </div>
 
         {CONTACTS.map((group) => (
@@ -289,22 +289,24 @@ export default function EmergencyContactsPage() {
                               <ExternalLink className="w-3.5 h-3.5" />
                             </a>
                           )}
-                          <a
-                            href={`tel:${entry.number.replace(/\D/g, "")}`}
-                            className="flex items-center gap-1.5 text-sm font-bold text-[#1E3A5F] hover:underline whitespace-nowrap"
-                          >
-                            <Phone className="w-3.5 h-3.5" />
-                            {entry.number}
-                          </a>
-                          {!entry.confirmed && (
+                          {entry.confirmed ? (
+                            <a
+                              href={`tel:${entry.number.replace(/\D/g, "")}`}
+                              className="flex items-center gap-1.5 text-sm font-bold text-[#1E3A5F] hover:underline whitespace-nowrap"
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              {entry.number}
+                            </a>
+                          ) : (
                             <button
                               onClick={() =>
                                 setOpenForm(isFormOpen ? null : { entryLabel: entry.label, currentNumber: entry.number })
                               }
-                              className="text-xs text-orange-500 hover:text-orange-700 underline ml-1"
-                              title="Report inaccuracy"
+                              className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-800 whitespace-nowrap"
+                              title="Request phone number update"
                             >
-                              Update
+                              <Flag className="w-3.5 h-3.5" />
+                              Request Phone Number
                             </button>
                           )}
                         </div>
@@ -325,7 +327,7 @@ export default function EmergencyContactsPage() {
         ))}
 
         <p className="text-center text-xs text-gray-400 pt-2 pb-4">
-          Numbers marked <Flag className="inline w-3 h-3 text-orange-400" /> are unverified — tap "Update" to suggest a correction.
+          Entries with <Flag className="inline w-3 h-3 text-orange-400" /> need verification — tap "Request Phone Number" to submit the correct number.
           Confirmed numbers sourced from official JIC releases and government websites.
         </p>
       </div>
