@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
   AlertTriangle, CheckCircle2, Clock, ShieldOff,
-  Inbox, Loader2, Megaphone, Trash2, Home,
+  Inbox, Loader2, Megaphone, Trash2, Home, ChevronDown, ChevronUp,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -149,6 +149,39 @@ function OverviewTab() {
 
 // ── Organizations tab ─────────────────────────────────────────────────────────
 
+function OrgSection({
+  title, titleClass, orgs, refetch,
+}: {
+  title: string
+  titleClass: string
+  orgs: any[]
+  refetch: () => void
+}) {
+  const [open, setOpen] = useState(true)
+  if (orgs.length === 0) return null
+  return (
+    <section>
+      <button
+        className="flex items-center gap-2 mb-2 w-full text-left group"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <h2 className={`text-base font-semibold ${titleClass}`}>
+          {title} ({orgs.length})
+        </h2>
+        {open
+          ? <ChevronUp className={`h-4 w-4 ${titleClass} opacity-60 group-hover:opacity-100`} />
+          : <ChevronDown className={`h-4 w-4 ${titleClass} opacity-60 group-hover:opacity-100`} />
+        }
+      </button>
+      {open && (
+        <div className="space-y-2">
+          {orgs.map((o) => <OrgAdminCard key={o.id} org={o as any} onRefetch={refetch} />)}
+        </div>
+      )}
+    </section>
+  )
+}
+
 function OrgsTab() {
   const { supabaseClient } = useAuth()
 
@@ -173,24 +206,9 @@ function OrgsTab() {
 
   return (
     <div className="space-y-6">
-      {queue.length > 0 && (
-        <section>
-          <h2 className="text-base font-semibold mb-2 text-yellow-700">Verification Queue ({queue.length})</h2>
-          <div className="space-y-2">{queue.map((o) => <OrgAdminCard key={o.id} org={o as any} onRefetch={refetch} />)}</div>
-        </section>
-      )}
-      {verified.length > 0 && (
-        <section>
-          <h2 className="text-base font-semibold mb-2 text-green-700">Verified ({verified.length})</h2>
-          <div className="space-y-2">{verified.map((o) => <OrgAdminCard key={o.id} org={o as any} onRefetch={refetch} />)}</div>
-        </section>
-      )}
-      {unverified.length > 0 && (
-        <section>
-          <h2 className="text-base font-semibold mb-2 text-muted-foreground">Not Requested ({unverified.length})</h2>
-          <div className="space-y-2">{unverified.map((o) => <OrgAdminCard key={o.id} org={o as any} onRefetch={refetch} />)}</div>
-        </section>
-      )}
+      <OrgSection title="Verification Queue" titleClass="text-yellow-700" orgs={queue} refetch={refetch} />
+      <OrgSection title="Verified" titleClass="text-green-700" orgs={verified} refetch={refetch} />
+      <OrgSection title="Not Requested" titleClass="text-muted-foreground" orgs={unverified} refetch={refetch} />
       {(orgs?.length ?? 0) === 0 && (
         <p className="text-sm text-muted-foreground">No organizations yet.</p>
       )}
