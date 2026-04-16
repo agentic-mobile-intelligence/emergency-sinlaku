@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
-  AlertTriangle, CheckCircle2, Clock, ShieldCheck, ShieldOff,
+  AlertTriangle, CheckCircle2, Clock, ShieldOff,
   Inbox, Loader2, Megaphone, Trash2, Home,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -20,7 +20,6 @@ import {
 import { useAuth } from "@/hooks/useAuth"
 import { useUserRole } from "@/contexts/UserRoleContext"
 import type { Database } from "@/lib/database.types"
-import OrgBadge from "@/components/OrgBadge"
 import OrgAdminCard from "@/components/OrgAdminCard"
 
 type Island = Database["public"]["Enums"]["island"]
