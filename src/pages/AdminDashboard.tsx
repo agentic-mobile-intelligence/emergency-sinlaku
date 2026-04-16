@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useUserRole } from "@/contexts/UserRoleContext"
 import type { Database } from "@/lib/database.types"
 import OrgBadge from "@/components/OrgBadge"
+import OrgAdminCard from "@/components/OrgAdminCard"
 
 type Island = Database["public"]["Enums"]["island"]
 type ServiceType = Database["public"]["Enums"]["service_type"]
@@ -151,7 +152,6 @@ function OverviewTab() {
 
 function OrgsTab() {
   const { supabaseClient } = useAuth()
-  const [updating, setUpdating] = useState<string | null>(null)
 
   const { data: orgs, isLoading, refetch } = useQuery({
     queryKey: ["admin", "organizations"],
@@ -166,113 +166,30 @@ function OrgsTab() {
     },
   })
 
-  async function toggleVerified(id: string, current: boolean) {
-    setUpdating(id)
-    const { error } = await supabaseClient
-      .from("organizations")
-      .update({ verified: !current, verification_requested: current ? false : true })
-      .eq("id", id)
-    if (error) toast.error("Update failed: " + error.message)
-    else { toast.success(current ? "Org unverified." : "Org verified!"); refetch() }
-    setUpdating(null)
-  }
-
-  async function updateCategory(id: string, category: OrgCategory) {
-    const { error } = await supabaseClient
-      .from("organizations")
-      .update({ org_category: category })
-      .eq("id", id)
-    if (error) toast.error("Category update failed: " + error.message)
-    else { toast.success("Category updated."); refetch() }
-  }
-
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>
 
   const queue = orgs?.filter((o) => o.verification_requested && !o.verified) ?? []
   const verified = orgs?.filter((o) => o.verified) ?? []
   const unverified = orgs?.filter((o) => !o.verified && !o.verification_requested) ?? []
 
-  function OrgCard({ org }: { org: typeof orgs[number] }) {
-    return (
-      <Card className={`border ${org.verified ? "border-green-500/30 bg-green-500/5" : org.verification_requested ? "border-yellow-500/40 bg-yellow-500/5" : ""}`}>
-        <CardContent className="px-4 py-3 space-y-2">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-0.5 flex-1 min-w-0">
-              <p className="font-semibold text-sm">{org.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {org.contact_phone}{org.contact_email ? ` · ${org.contact_email}` : ""}{org.whatsapp ? ` · WA: ${org.whatsapp}` : ""}
-              </p>
-              <div className="flex flex-wrap gap-1 pt-0.5">
-                <OrgBadge category={(org.org_category as OrgCategory) ?? "uncategorized"} verified={org.verified} size="sm" />
-                {(org.islands as Island[]).map((i) => (
-                  <Badge key={i} variant="outline" className="text-xs">{ISLAND_LABELS[i]}</Badge>
-                ))}
-                {(org.service_types as ServiceType[]).map((s) => (
-                  <Badge key={s} variant="secondary" className="text-xs">{SERVICE_LABELS[s]}</Badge>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              {org.verified
-                ? <><ShieldCheck className="h-4 w-4 text-green-600" /><span className="text-xs text-green-600 font-medium">Verified</span></>
-                : org.verification_requested
-                  ? <><ShieldOff className="h-4 w-4 text-yellow-600" /><span className="text-xs text-yellow-600 font-medium">Pending</span></>
-                  : <><ShieldOff className="h-4 w-4 text-muted-foreground" /><span className="text-xs text-muted-foreground">Unverified</span></>
-              }
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Select
-              value={(org.org_category as OrgCategory) ?? "uncategorized"}
-              onValueChange={(v) => updateCategory(org.id, v as OrgCategory)}
-            >
-              <SelectTrigger className="h-7 text-xs w-52">
-                <SelectValue placeholder="Set category…" />
-              </SelectTrigger>
-              <SelectContent>
-                {ORG_CATEGORY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              size="sm"
-              variant={org.verified ? "outline" : "default"}
-              className={org.verified ? "h-7 text-xs" : "h-7 text-xs bg-[#1E3A5F]"}
-              disabled={updating === org.id}
-              onClick={() => toggleVerified(org.id, org.verified)}
-            >
-              {updating === org.id
-                ? <Loader2 className="h-3 w-3 animate-spin" />
-                : org.verified ? "Unverify" : "Verify ✓"
-              }
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {queue.length > 0 && (
         <section>
           <h2 className="text-base font-semibold mb-2 text-yellow-700">Verification Queue ({queue.length})</h2>
-          <div className="space-y-2">{queue.map((o) => <OrgCard key={o.id} org={o} />)}</div>
+          <div className="space-y-2">{queue.map((o) => <OrgAdminCard key={o.id} org={o as any} onRefetch={refetch} />)}</div>
         </section>
       )}
       {verified.length > 0 && (
         <section>
           <h2 className="text-base font-semibold mb-2 text-green-700">Verified ({verified.length})</h2>
-          <div className="space-y-2">{verified.map((o) => <OrgCard key={o.id} org={o} />)}</div>
+          <div className="space-y-2">{verified.map((o) => <OrgAdminCard key={o.id} org={o as any} onRefetch={refetch} />)}</div>
         </section>
       )}
       {unverified.length > 0 && (
         <section>
           <h2 className="text-base font-semibold mb-2 text-muted-foreground">Not Requested ({unverified.length})</h2>
-          <div className="space-y-2">{unverified.map((o) => <OrgCard key={o.id} org={o} />)}</div>
+          <div className="space-y-2">{unverified.map((o) => <OrgAdminCard key={o.id} org={o as any} onRefetch={refetch} />)}</div>
         </section>
       )}
       {(orgs?.length ?? 0) === 0 && (
