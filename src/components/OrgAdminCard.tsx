@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ShieldCheck, ShieldOff, Loader2, Pencil, ChevronDown, ChevronUp, Check, X } from "lucide-react"
+import { ShieldCheck, ShieldOff, Loader2, Pencil, ChevronDown, ChevronUp, Check, X, EyeOff, Eye } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,7 @@ export type OrgAdminData = {
   verified: boolean
   verification_requested: boolean
   org_category: OrgCategory | null
+  hidden_from_map: boolean
 }
 
 const ORG_CATEGORY_OPTIONS: { value: OrgCategory; label: string }[] = [
@@ -123,6 +124,15 @@ export default function OrgAdminCard({ org, onRefetch }: Props) {
     if (error) toast.error("Update failed: " + error.message)
     else { toast.success(org.verified ? "Org unverified." : "Org verified!"); onRefetch() }
     setUpdating(false)
+  }
+
+  async function toggleHiddenFromMap() {
+    const { error } = await supabaseClient
+      .from("organizations")
+      .update({ hidden_from_map: !org.hidden_from_map })
+      .eq("id", org.id)
+    if (error) toast.error("Update failed: " + error.message)
+    else { toast.success(org.hidden_from_map ? "Org visible on map." : "Org hidden from map."); onRefetch() }
   }
 
   async function updateCategory(category: OrgCategory) {
@@ -240,6 +250,18 @@ export default function OrgAdminCard({ org, onRefetch }: Props) {
                 {editing
                   ? <><X className="h-3 w-3 mr-1" />Cancel</>
                   : <><Pencil className="h-3 w-3 mr-1" />Edit</>
+                }
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className={`h-7 text-xs ${org.hidden_from_map ? "border-orange-400 text-orange-600 hover:bg-orange-50" : "text-muted-foreground"}`}
+                onClick={toggleHiddenFromMap}
+                title={org.hidden_from_map ? "Show on map" : "Hide from map"}
+              >
+                {org.hidden_from_map
+                  ? <><EyeOff className="h-3 w-3 mr-1" />Hidden from map</>
+                  : <><Eye className="h-3 w-3 mr-1" />Hide from map</>
                 }
               </Button>
             </div>

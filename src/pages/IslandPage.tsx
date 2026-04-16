@@ -20,7 +20,7 @@ import type { Tables } from "@/lib/database.types"
 import { Constants } from "@/lib/database.types"
 import OrgBadge from "@/components/OrgBadge"
 
-type Offering = Tables<"offerings"> & { organizations: Pick<Tables<"organizations">, "name" | "contact_phone" | "verified" | "org_category"> }
+type Offering = Tables<"offerings"> & { organizations: Pick<Tables<"organizations">, "name" | "contact_phone" | "verified" | "org_category" | "hidden_from_map"> }
 
 const BRAND = "#1E3A5F"
 
@@ -134,7 +134,7 @@ export default function IslandPage() {
     setLoading(true)
     supabase
       .from("offerings")
-      .select("*, organizations(name, contact_phone, verified, org_category)")
+      .select("*, organizations(name, contact_phone, verified, org_category, hidden_from_map)")
       .eq("island", island as any)
       .then(({ data, error }) => {
         if (!error && data) setOfferings(data as Offering[])
@@ -165,6 +165,7 @@ export default function IslandPage() {
   const filtered = useMemo(
     () =>
       offerings.filter((o) => {
+        if (o.organizations?.hidden_from_map) return false
         if (!activeTypes.has(o.service_type)) return false
         if (!activeStatuses.has(o.status)) return false
         if (essentialFilter === "essential" && !ESSENTIAL_TYPES.has(o.service_type)) return false

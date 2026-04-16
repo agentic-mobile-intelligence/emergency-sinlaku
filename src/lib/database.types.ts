@@ -570,6 +570,7 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           description: string | null
+          hidden_from_map: boolean
           id: string
           is_archived: boolean
           islands: Database["public"]["Enums"]["island"][]
@@ -592,6 +593,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
+          hidden_from_map?: boolean
           id?: string
           is_archived?: boolean
           islands?: Database["public"]["Enums"]["island"][]
@@ -614,6 +616,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
+          hidden_from_map?: boolean
           id?: string
           is_archived?: boolean
           islands?: Database["public"]["Enums"]["island"][]
@@ -630,6 +633,45 @@ export type Database = {
           verification_requested?: boolean
           verified?: boolean
           whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      phone_corrections: {
+        Row: {
+          contact_label: string
+          created_at: string
+          current_number: string
+          id: string
+          notes: string | null
+          reviewed_at: string | null
+          status: string
+          submitted_by_name: string | null
+          submitted_by_user_id: string | null
+          suggested_number: string
+        }
+        Insert: {
+          contact_label: string
+          created_at?: string
+          current_number: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          status?: string
+          submitted_by_name?: string | null
+          submitted_by_user_id?: string | null
+          suggested_number: string
+        }
+        Update: {
+          contact_label?: string
+          created_at?: string
+          current_number?: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          status?: string
+          submitted_by_name?: string | null
+          submitted_by_user_id?: string | null
+          suggested_number?: string
         }
         Relationships: []
       }
@@ -1033,6 +1075,15 @@ export const Constants = {
       aid_request_status: ["open", "responding", "fulfilled", "unable"],
       island: ["guam", "saipan", "tinian", "rota"],
       offering_status: ["active", "planned", "closed"],
+      org_category: [
+        "uncategorized",
+        "federal_agency",
+        "national_ngo",
+        "local_government",
+        "local_ngo",
+        "faith_based",
+        "community",
+      ],
       service_type: [
         "shelter",
         "food",

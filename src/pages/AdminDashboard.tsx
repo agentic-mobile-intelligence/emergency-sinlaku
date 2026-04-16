@@ -190,7 +190,7 @@ function OrgsTab() {
     queryFn: async () => {
       const { data, error } = await supabaseClient
         .from("organizations")
-        .select("id, name, contact_phone, contact_email, whatsapp, islands, service_types, verified, verification_requested, org_category, created_at")
+        .select("id, name, contact_phone, contact_email, whatsapp, islands, service_types, verified, verification_requested, org_category, hidden_from_map, created_at")
         .order("verification_requested", { ascending: false })
         .order("created_at", { ascending: false })
       if (error) throw error
