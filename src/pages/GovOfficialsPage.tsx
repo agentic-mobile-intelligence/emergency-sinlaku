@@ -12,8 +12,8 @@ export default function GovOfficialsPage() {
             Government of Guam & CNMI — How to Participate
           </h1>
           <p className="text-sm text-gray-700">
-            We're asking Government of Guam and CNMI officials to reach out directly to show how they're aiding
-            in relief efforts. Your visibility on this directory helps residents find official resources.
+            Government of Guam and CNMI officials — reach out directly or self-register your agency.
+            Residents are using this directory right now to find help. Let them know official resources are here.
           </p>
         </div>
 

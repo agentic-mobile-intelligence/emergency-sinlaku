@@ -306,48 +306,56 @@ export default function IslandPage() {
                 </div>
               )}
 
-              {filtered.map((o) => (
-                <Card
-                  key={o.id}
-                  ref={(el) => { cardRefs.current[o.id] = el }}
-                  data-testid="service-card"
-                  className={`cursor-pointer transition-all print-card ${selectedId === o.id ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
-                  onClick={() => selectOffering(o.id)}
-                >
-                  <CardContent className="p-3 space-y-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">{o.name}</div>
-                        <div className="text-xs text-gray-500 truncate">{o.organizations?.name}</div>
+              {filtered.map((o) => {
+                const isVerified = o.organizations?.verified ?? false
+                return (
+                  <Card
+                    key={o.id}
+                    ref={(el) => { cardRefs.current[o.id] = el }}
+                    data-testid="service-card"
+                    className={`cursor-pointer transition-all print-card ${selectedId === o.id ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"} ${!isVerified ? "border-amber-200" : ""}`}
+                    onClick={() => selectOffering(o.id)}
+                  >
+                    <CardContent className="p-3 space-y-1.5">
+                      {!isVerified && (
+                        <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 text-[10px] text-amber-700 font-semibold">
+                          ⚠️ Unverified organization
+                        </div>
+                      )}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm truncate">{o.name}</div>
+                          <div className="text-xs text-gray-500 truncate">{o.organizations?.name}</div>
+                        </div>
+                        <Badge
+                          variant={STATUS_LABELS[o.status]?.variant ?? "outline"}
+                          className="text-[10px] shrink-0"
+                        >
+                          {STATUS_LABELS[o.status]?.label ?? o.status}
+                        </Badge>
                       </div>
-                      <Badge
-                        variant={STATUS_LABELS[o.status]?.variant ?? "outline"}
-                        className="text-[10px] shrink-0"
-                      >
-                        {STATUS_LABELS[o.status]?.label ?? o.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: SERVICE_COLORS[o.service_type] }} />
-                        <span className="capitalize">{o.service_type}</span>
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />{o.location_text}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <Clock className="h-3 w-3" />{o.hours_text}
-                    </div>
-                    {o.organizations && (
-                      <OrgBadge
-                        category={o.organizations.org_category ?? "uncategorized"}
-                        verified={o.organizations.verified}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: SERVICE_COLORS[o.service_type] }} />
+                          <span className="capitalize">{o.service_type}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />{o.location_text}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Clock className="h-3 w-3" />{o.hours_text}
+                      </div>
+                      {o.organizations && (
+                        <OrgBadge
+                          category={o.organizations.org_category ?? "uncategorized"}
+                          verified={o.organizations.verified}
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
 
             {/* Emergency Resources */}

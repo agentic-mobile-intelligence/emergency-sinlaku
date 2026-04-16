@@ -11,12 +11,12 @@ export default function GovOfficialsBanner({ onDismiss }: Props) {
       <div className="max-w-7xl mx-auto flex items-center gap-3">
         <Landmark className="w-3.5 h-3.5 shrink-0" />
         <p className="flex-1 text-xs font-semibold leading-snug">
-          Requesting Government of Guam and CNMI officials to reach out directly to show how they're aiding in relief efforts.{" "}
+          Government of Guam &amp; CNMI officials: reach out directly or self-register your agency — let residents know you're here.{" "}
           <Link
             to="/gov-officials"
             className="underline underline-offset-2 font-bold hover:opacity-70 transition"
           >
-            How to reach out →
+            Get listed →
           </Link>
         </p>
         <button
