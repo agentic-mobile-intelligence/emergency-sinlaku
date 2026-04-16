@@ -57,7 +57,7 @@ function LandingPage() {
       )}
 
       <h1 className="text-3xl font-bold text-[#1E3A5F] mb-2 text-center">
-        Mariana Islands Emergency Relief Directory
+        Guam, and the Commonwealth of the Northern Mariana Islands (CNMI) Emergency Relief Directory
       </h1>
       <p className="text-gray-600 mb-8 text-center max-w-lg">
         Find emergency services, support, and relief resources for communities affected by Supertyphoon Sinlaku.
@@ -70,8 +70,19 @@ function LandingPage() {
       </div>
       <p className="mt-4 text-xs text-gray-400">Select an island to view emergency services on the map</p>
 
+      {/* Getting Started */}
+      <div className="mt-8 w-full max-w-md">
+        <Link
+          to="/instructions"
+          className="flex items-center justify-between w-full border-2 border-[#1E3A5F] text-[#1E3A5F] font-bold text-sm rounded-lg px-4 py-3 hover:bg-[#1E3A5F]/5 transition"
+        >
+          <span>Getting Started</span>
+          <span className="text-[#1E3A5F]/60">→</span>
+        </Link>
+      </div>
+
       {/* Volunteer CTA */}
-      <div className="mt-8 w-full max-w-md rounded-xl border-2 border-[#1E3A5F] bg-[#1E3A5F]/5 p-5">
+      <div className="mt-3 w-full max-w-md rounded-xl border-2 border-[#1E3A5F] bg-[#1E3A5F]/5 p-5">
         <p className="text-sm font-semibold text-[#1E3A5F] mb-1">🙋 Want to help?</p>
         <p className="text-xs text-gray-600 mb-3">
           Sign up to volunteer with relief organizations. No account required.
@@ -108,21 +119,14 @@ function LandingPage() {
         </Link>
       </div>
 
-      {/* How to Help / Donate CTA */}
-      <div className="mt-3 w-full max-w-md flex gap-2">
+      {/* How to Help CTA */}
+      <div className="mt-3 w-full max-w-md">
         <Link
           to="/how-to-help"
-          className="flex-1 flex items-center justify-between bg-green-700 text-white font-bold text-sm rounded-lg px-4 py-3 hover:bg-green-800 transition"
+          className="flex items-center justify-between w-full bg-green-700 text-white font-bold text-sm rounded-lg px-4 py-3 hover:bg-green-800 transition"
         >
           <span>💚 How to Help</span>
           <span className="text-white/80">→</span>
-        </Link>
-        <Link
-          to="/instructions"
-          className="flex items-center justify-between border-2 border-[#1E3A5F] text-[#1E3A5F] font-bold text-sm rounded-lg px-4 py-3 hover:bg-[#1E3A5F]/5 transition"
-        >
-          <span>ℹ️ Instructions</span>
-          <span className="text-[#1E3A5F]/60 ml-2">→</span>
         </Link>
       </div>
 
