@@ -216,8 +216,8 @@ export default function IslandPage() {
         </div>
       </div>
 
-      {/* Main: drawer + map */}
-      <div className="flex-1 flex flex-col md:flex-row relative">
+      {/* Main: drawer + map (print: map first, then list) */}
+      <div className="flex-1 flex flex-col md:flex-row relative print:flex-col-reverse">
         {/* Mobile drawer toggle */}
         <button
           onClick={() => setDrawerOpen(!drawerOpen)}

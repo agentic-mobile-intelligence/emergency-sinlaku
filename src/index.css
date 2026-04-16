@@ -92,7 +92,7 @@
   /* Hide non-printable elements */
   header, nav, .animate-marquee, .no-print,
   [data-clerk-component], button:not(.print-keep),
-  .leaflet-container, footer {
+  footer {
     display: none !important;
   }
 
@@ -111,6 +111,43 @@
     overflow: visible !important;
     height: auto !important;
     max-height: none !important;
+  }
+
+  /* B&W low-fidelity map for print */
+  .leaflet-container {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: 350pt !important;
+    min-height: 350pt !important;
+    filter: grayscale(1) contrast(1.1) !important;
+    border: 2pt solid #333 !important;
+    margin-bottom: 12pt !important;
+    break-after: page;
+  }
+
+  /* Hide map controls in print */
+  .leaflet-control-container {
+    display: none !important;
+  }
+
+  /* Make pins darker for B&W readability */
+  .leaflet-marker-icon svg path {
+    stroke: #000 !important;
+    stroke-width: 1px !important;
+  }
+
+  /* Print layout: map on top, list below */
+  .print\\:flex-col-reverse {
+    flex-direction: column-reverse !important;
+  }
+
+  /* Map wrapper: full width in print */
+  .print\\:flex-col-reverse > div:last-child {
+    width: 100% !important;
+    height: 350pt !important;
+    min-height: 350pt !important;
+    flex: none !important;
   }
 
   /* Service cards: clean print layout */

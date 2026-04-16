@@ -4,6 +4,7 @@ const MARQUEE_LINKS = [
   { label: "⚠️ SCHOOL CLOSURE: DOWEA schools closed Thursday & Friday", href: "/news", internal: true },
   { label: "911 Emergency", href: "tel:911" },
   { label: "988 Crisis Lifeline — call or text", href: "tel:988" },
+  { label: "SAMHSA Disaster Distress 1-800-985-5990", href: "tel:18009855990" },
   { label: "311 Non-Emergency", href: "tel:311" },
   { label: "FEMA 1-800-621-3362", href: "tel:18006213362" },
   { label: "GHS/OCD — ghs.guam.gov", href: "https://ghs.guam.gov/" },

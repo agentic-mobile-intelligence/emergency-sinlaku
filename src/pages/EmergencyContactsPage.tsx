@@ -67,6 +67,13 @@ const CONTACTS: ContactGroup[] = [
         confirmed: true,
         link: "https://gbhwc.guam.gov/services/intake-emergency-services-crisis-hotline-0",
       },
+      {
+        label: "SAMHSA Disaster Distress Helpline",
+        number: "1-800-985-5990",
+        note: "24/7 crisis counseling for disaster survivors · text TalkWithUs to 66746",
+        confirmed: true,
+        link: "https://www.samhsa.gov/find-help/helplines/disaster-distress-helpline",
+      },
     ],
   },
   {
