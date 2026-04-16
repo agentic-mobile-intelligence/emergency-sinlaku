@@ -143,10 +143,19 @@ function CorrectionForm({
   const [notes, setNotes] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
+  const isValidPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "")
+    return digits.length >= 3 && digits.length <= 15
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!suggested.trim()) {
       toast.error("Please enter the correct number.")
+      return
+    }
+    if (!isValidPhone(suggested)) {
+      toast.error("Please enter a valid phone number (3–15 digits).")
       return
     }
     setSubmitting(true)
@@ -180,6 +189,7 @@ function CorrectionForm({
         <div>
           <Label className="text-xs text-orange-700">Correct number <span className="text-destructive">*</span></Label>
           <Input
+            type="tel"
             value={suggested}
             onChange={(e) => setSuggested(e.target.value)}
             placeholder="e.g. (671) 123-4567"
@@ -251,7 +261,7 @@ export default function EmergencyContactsPage() {
         {/* Legend */}
         <div className="flex items-center gap-4 text-xs text-gray-500">
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> Confirmed from official source</span>
-          <span className="flex items-center gap-1"><Flag className="w-3.5 h-3.5 text-orange-500" /> Unverified — tap to request phone number</span>
+          <span className="flex items-center gap-1"><Flag className="w-3.5 h-3.5 text-orange-500" /> Unverified — request to update</span>
         </div>
 
         {CONTACTS.map((group) => (
@@ -302,11 +312,11 @@ export default function EmergencyContactsPage() {
                               onClick={() =>
                                 setOpenForm(isFormOpen ? null : { entryLabel: entry.label, currentNumber: entry.number })
                               }
-                              className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-800 whitespace-nowrap"
-                              title="Request phone number update"
+                              className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-800 whitespace-nowrap border border-orange-300 rounded-md px-2.5 py-1.5 hover:bg-orange-50 transition"
+                              title="Request to update phone number"
                             >
                               <Flag className="w-3.5 h-3.5" />
-                              Request Phone Number
+                              Request To Update Phone Number
                             </button>
                           )}
                         </div>
@@ -327,7 +337,7 @@ export default function EmergencyContactsPage() {
         ))}
 
         <p className="text-center text-xs text-gray-400 pt-2 pb-4">
-          Entries with <Flag className="inline w-3 h-3 text-orange-400" /> need verification — tap "Request Phone Number" to submit the correct number.
+          Entries with <Flag className="inline w-3 h-3 text-orange-400" /> need verification — tap "Request To Update Phone Number" to submit the correct number.
           Confirmed numbers sourced from official JIC releases and government websites.
         </p>
       </div>
