@@ -24,7 +24,7 @@ create policy "Admins can read all phone corrections"
   using (
     exists (
       select 1 from public.profiles
-      where profiles.user_id = (current_setting('request.jwt.claims', true)::jsonb->>'sub')
+      where profiles.clerk_user_id = (current_setting('request.jwt.claims', true)::jsonb->>'sub')
         and profiles.role = 'admin'
     )
   );
@@ -34,7 +34,7 @@ create policy "Admins can update phone corrections"
   using (
     exists (
       select 1 from public.profiles
-      where profiles.user_id = (current_setting('request.jwt.claims', true)::jsonb->>'sub')
+      where profiles.clerk_user_id = (current_setting('request.jwt.claims', true)::jsonb->>'sub')
         and profiles.role = 'admin'
     )
   );

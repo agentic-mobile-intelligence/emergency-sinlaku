@@ -31,7 +31,7 @@ const CONTACTS: ContactGroup[] = [
     labelColor: "text-[#1E3A5F]",
     entries: [
       { label: "GovGuam Non-Emergency", number: "311", note: "Guam", confirmed: false },
-      { label: "GovGuam Emergency Hotline (OCD)", number: "(671) 475-9600", note: "Guam OCD", confirmed: false },
+      { label: "GHS / Office of Civil Defense", number: "(671) 475-9600", note: "Guam OCD — ghs.guam.gov", confirmed: true, link: "https://ghs.guam.gov/" },
       { label: "CNMI Emergency Mgmt", number: "(670) 322-8001", note: "CNMI", confirmed: false },
       {
         label: "Joint Information Center (JIC)",
