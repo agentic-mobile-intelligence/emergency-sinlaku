@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom"
 
 const MARQUEE_LINKS = [
+  { label: "⚠️ SCHOOL CLOSURE: DOWEA schools closed Thursday & Friday", href: "/news", internal: true },
   { label: "911 Emergency", href: "tel:911" },
+  { label: "988 Crisis Lifeline — call or text", href: "tel:988" },
   { label: "311 Non-Emergency", href: "tel:311" },
   { label: "FEMA 1-800-621-3362", href: "tel:18006213362" },
+  { label: "GHS/OCD — ghs.guam.gov", href: "https://ghs.guam.gov/" },
   { label: "NWS Guam", href: "https://www.weather.gov/gum/" },
   { label: "NWS Facebook", href: "https://www.facebook.com/NWSGuam/" },
-  { label: "GHS/OCD", href: "https://ghs.guam.gov/" },
   { label: "GHS/OCD Facebook", href: "https://www.facebook.com/GHSOCD/" },
   { label: "JRM Facebook", href: "https://www.facebook.com/jrmguam" },
   { label: "JTF-M Facebook", href: "https://www.facebook.com/1CdEchVcDs/" },
@@ -18,14 +20,20 @@ function MarqueeContent() {
     <>
       {MARQUEE_LINKS.map((link, i) => (
         <span key={i} className="inline-flex items-center gap-1 whitespace-nowrap">
-          <a
-            href={link.href}
-            target={link.href.startsWith("tel:") ? undefined : "_blank"}
-            rel={link.href.startsWith("tel:") ? undefined : "noopener noreferrer"}
-            className="underline hover:opacity-80"
-          >
-            {link.label}
-          </a>
+          {link.internal ? (
+            <Link to={link.href} className="underline hover:opacity-80">
+              {link.label}
+            </Link>
+          ) : (
+            <a
+              href={link.href}
+              target={link.href.startsWith("tel:") ? undefined : "_blank"}
+              rel={link.href.startsWith("tel:") ? undefined : "noopener noreferrer"}
+              className="underline hover:opacity-80"
+            >
+              {link.label}
+            </a>
+          )}
           <span className="mx-3 text-white/40">|</span>
         </span>
       ))}

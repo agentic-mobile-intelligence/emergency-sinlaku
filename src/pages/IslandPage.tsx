@@ -50,6 +50,17 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
   closed: { label: "Closed", variant: "outline" },
 }
 
+// Services considered essential during COR 2 / active emergency
+const ESSENTIAL_TYPES = new Set(["medical", "food", "water", "shelter"])
+
+type EssentialFilter = "all" | "essential" | "non_essential"
+
+const ESSENTIAL_FILTER_OPTIONS: { value: EssentialFilter; label: string; color: string }[] = [
+  { value: "all", label: "All services", color: "#1E3A5F" },
+  { value: "essential", label: "Essential only", color: "#16A34A" },
+  { value: "non_essential", label: "Non-essential only", color: "#9333EA" },
+]
+
 function createPinIcon(color: string) {
   return L.divIcon({
     className: "",
@@ -111,6 +122,7 @@ export default function IslandPage() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
   const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set(Constants.public.Enums.service_type))
   const [activeStatuses, setActiveStatuses] = useState<Set<string>>(new Set(["active", "planned"]))
+  const [essentialFilter, setEssentialFilter] = useState<EssentialFilter>("all")
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(true)
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -152,10 +164,14 @@ export default function IslandPage() {
 
   const filtered = useMemo(
     () =>
-      offerings.filter(
-        (o) => activeTypes.has(o.service_type) && activeStatuses.has(o.status)
-      ),
-    [offerings, activeTypes, activeStatuses]
+      offerings.filter((o) => {
+        if (!activeTypes.has(o.service_type)) return false
+        if (!activeStatuses.has(o.status)) return false
+        if (essentialFilter === "essential" && !ESSENTIAL_TYPES.has(o.service_type)) return false
+        if (essentialFilter === "non_essential" && ESSENTIAL_TYPES.has(o.service_type)) return false
+        return true
+      }),
+    [offerings, activeTypes, activeStatuses, essentialFilter]
   )
 
   const toggleType = (t: string) =>
@@ -255,6 +271,32 @@ export default function IslandPage() {
               </Button>
             </div>
 
+            {/* Essential / Non-essential toggle */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Filter className="h-3.5 w-3.5" /> Service availability
+              </div>
+              <div className="flex flex-col gap-1">
+                {ESSENTIAL_FILTER_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setEssentialFilter(opt.value)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold border transition ${
+                      essentialFilter === opt.value
+                        ? "text-white border-transparent"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                    }`}
+                    style={essentialFilter === opt.value ? { backgroundColor: opt.color, borderColor: opt.color } : {}}
+                  >
+                    {opt.value === "essential" && <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />}
+                    {opt.value === "non_essential" && <span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />}
+                    {opt.value === "all" && <span className="w-2 h-2 rounded-full bg-gray-400 inline-block" />}
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Service type filters */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -308,6 +350,7 @@ export default function IslandPage() {
 
               {filtered.map((o) => {
                 const isVerified = o.organizations?.verified ?? false
+                const isEssential = ESSENTIAL_TYPES.has(o.service_type)
                 return (
                   <Card
                     key={o.id}
@@ -327,12 +370,23 @@ export default function IslandPage() {
                           <div className="font-semibold text-sm truncate">{o.name}</div>
                           <div className="text-xs text-gray-500 truncate">{o.organizations?.name}</div>
                         </div>
-                        <Badge
-                          variant={STATUS_LABELS[o.status]?.variant ?? "outline"}
-                          className="text-[10px] shrink-0"
-                        >
-                          {STATUS_LABELS[o.status]?.label ?? o.status}
-                        </Badge>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <span
+                            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${
+                              isEssential
+                                ? "bg-green-50 border-green-300 text-green-700"
+                                : "bg-purple-50 border-purple-200 text-purple-600"
+                            }`}
+                          >
+                            {isEssential ? "Essential" : "Non-essential"}
+                          </span>
+                          <Badge
+                            variant={STATUS_LABELS[o.status]?.variant ?? "outline"}
+                            className="text-[10px]"
+                          >
+                            {STATUS_LABELS[o.status]?.label ?? o.status}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-gray-500">
                         <span className="flex items-center gap-1">

@@ -1296,6 +1296,118 @@ function NewsTab() {
   )
 }
 
+// ── Phone Corrections tab ─────────────────────────────────────────────────────
+
+type PhoneCorrection = {
+  id: string
+  contact_label: string
+  current_number: string
+  suggested_number: string
+  notes: string | null
+  submitted_by_name: string | null
+  status: string
+  created_at: string
+}
+
+function PhoneCorrectionsTab() {
+  const { supabaseClient } = useAuth()
+
+  const { data: corrections, isLoading, refetch } = useQuery({
+    queryKey: ["admin", "phone_corrections"],
+    queryFn: async () => {
+      const { data, error } = await (supabaseClient as any)
+        .from("phone_corrections")
+        .select("*")
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return data as PhoneCorrection[]
+    },
+  })
+
+  const updateStatus = async (id: string, status: "accepted" | "rejected") => {
+    const { error } = await (supabaseClient as any)
+      .from("phone_corrections")
+      .update({ status, reviewed_at: new Date().toISOString() })
+      .eq("id", id)
+    if (error) { toast.error("Update failed"); return }
+    toast.success(`Correction ${status}`)
+    refetch()
+  }
+
+  const pending = corrections?.filter((c) => c.status === "pending") ?? []
+  const reviewed = corrections?.filter((c) => c.status !== "pending") ?? []
+
+  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-bold text-[#1E3A5F] mb-1">Phone Number Corrections</h2>
+        <p className="text-xs text-muted-foreground">Community-submitted corrections for unverified emergency contact numbers.</p>
+      </div>
+
+      <section>
+        <h3 className="text-sm font-semibold mb-3 text-orange-700">Pending ({pending.length})</h3>
+        {pending.length === 0 ? (
+          <p className="text-sm text-gray-400">No pending corrections.</p>
+        ) : (
+          <div className="space-y-3">
+            {pending.map((c) => (
+              <Card key={c.id} className="border-orange-200 bg-orange-50/50">
+                <CardContent className="px-4 py-3 space-y-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">{c.contact_label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Current: <span className="font-mono">{c.current_number}</span>
+                        {" → "}
+                        Suggested: <span className="font-mono font-bold text-orange-700">{c.suggested_number}</span>
+                      </p>
+                      {c.notes && <p className="text-xs text-gray-500 mt-0.5">Note: {c.notes}</p>}
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        By {c.submitted_by_name ?? "Anonymous"} · {new Date(c.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <Button size="sm" variant="outline" className="text-xs border-green-400 text-green-700 hover:bg-green-50" onClick={() => updateStatus(c.id, "accepted")}>
+                        <CheckCircle2 className="w-3 h-3 mr-1" /> Accept
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs border-red-300 text-red-600 hover:bg-red-50" onClick={() => updateStatus(c.id, "rejected")}>
+                        <ShieldOff className="w-3 h-3 mr-1" /> Reject
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {reviewed.length > 0 && (
+        <section>
+          <h3 className="text-sm font-semibold mb-3 text-gray-500">Reviewed ({reviewed.length})</h3>
+          <div className="space-y-2">
+            {reviewed.map((c) => (
+              <Card key={c.id} className="opacity-60">
+                <CardContent className="px-4 py-2 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium">{c.contact_label}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{c.current_number} → {c.suggested_number}</p>
+                  </div>
+                  <Badge variant={c.status === "accepted" ? "default" : "outline"} className="text-xs capitalize">
+                    {c.status}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  )
+}
+
 // ── Root component ────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
@@ -1351,6 +1463,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="news">News</TabsTrigger>
             <TabsTrigger value="announcements">Alerts</TabsTrigger>
+            <TabsTrigger value="phone_corrections">Phone Fixes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview"><OverviewTab /></TabsContent>
@@ -1360,6 +1473,7 @@ export default function AdminDashboard() {
           <TabsContent value="users"><UsersTab /></TabsContent>
           <TabsContent value="news"><NewsTab /></TabsContent>
           <TabsContent value="announcements"><AnnouncementsTab /></TabsContent>
+          <TabsContent value="phone_corrections"><PhoneCorrectionsTab /></TabsContent>
         </Tabs>
       </main>
     </div>
