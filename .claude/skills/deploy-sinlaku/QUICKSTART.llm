@@ -1,0 +1,27 @@
+SKILL:deploy-sinlaku
+CMD:/deploy-sinlaku [prod|dev|status|logs|debug] DEFAULT:prod
+CODE:/Users/jay/Home/projects/active/directory-gu/hosted/sinlaku
+GITEA:gitea.elizaga.dev/directory-gu/emergency-sinlaku
+NEXLAYER:registry.nexlayer.io/nexlayer-mcp/emergency-sinlaku
+PROD_URL:sinlaku.directory.gu
+DEV_URL:amiable-beetle-emergency-sinlaku-dev.cluster-se1-us.nexlayer.ai
+NEXLAYER_YAML:nexlayer.yaml
+DEV_YAML:nexlayer.dev.yaml
+
+DEPLOY:
+SHA=$(git rev-parse --short HEAD)
+BUILD:if !podman image exists $GITEA:$SHA; then podman build --platform linux/amd64 -t $GITEA:$SHA -t $GITEA:latest -f Containerfile .; fi
+PUSH_GITEA:podman push $GITEA:$SHA && podman push $GITEA:latest
+MIRROR:podman login registry.nexlayer.io -u nexlayer-mcp-user -p NexlayerUser01 && podman tag $GITEA:$SHA $NEXLAYER:$SHA && podman push $NEXLAYER:$SHA
+DEPLOY_MCP:nexlayer_deploy(yaml with image:$NEXLAYER:$SHA)
+VERIFY:curl -s https://sinlaku.directory.gu/ | grep assets/index  slow(5-10s)=OK fast(<200ms)=FAIL
+
+DEV_OVERRIDES:
+NEXLAYER_IMG:registry.nexlayer.io/nexlayer-mcp/emergency-sinlaku-dev:$SHA
+APP_NAME:emergency-sinlaku-dev
+SUPABASE:hguhmgudjmqyiashftzk
+
+QUIRKS:
+no-status-check:nexlayer_check_deployment_status="No env found" for custom-domain apps—IGNORE if HTTP 200
+arch:always linux/amd64; ARM=fail
+force-rebuild:podman rmi $GITEA:$SHA then redeploy

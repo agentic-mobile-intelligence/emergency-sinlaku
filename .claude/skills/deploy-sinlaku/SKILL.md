@@ -72,12 +72,16 @@ Deploy or redeploy the emergency-sinlaku app to Nexlayer.
    echo $SHA
    ```
 
-2. **Build image:**
+2. **Build image (skip if already exists):**
    ```bash
-   podman build --platform linux/amd64 \
-     -t gitea.elizaga.dev/directory-gu/emergency-sinlaku:$SHA \
-     -t gitea.elizaga.dev/directory-gu/emergency-sinlaku:latest \
-     -f Containerfile .
+   if podman image exists gitea.elizaga.dev/directory-gu/emergency-sinlaku:$SHA; then
+     echo "Image already exists for $SHA — skipping build"
+   else
+     podman build --platform linux/amd64 \
+       -t gitea.elizaga.dev/directory-gu/emergency-sinlaku:$SHA \
+       -t gitea.elizaga.dev/directory-gu/emergency-sinlaku:latest \
+       -f Containerfile .
+   fi
    ```
 
 3. **Push to Gitea (source of truth):**
@@ -131,18 +135,27 @@ Same flow but:
 If the user wants to rebuild and push the image before deploying:
 
 ```bash
-# Run inside a podman container — NOT host node
 cd /Users/jay/Home/projects/active/directory-gu/hosted/sinlaku
+SHA=$(git rev-parse --short HEAD)
 
-# Build for linux/amd64 (required by Nexlayer)
-podman build --platform linux/amd64 \
-  -t gitea.elizaga.dev/directory-gu/emergency-sinlaku:latest .
+# Only build if image for this SHA doesn't already exist
+if podman image exists gitea.elizaga.dev/directory-gu/emergency-sinlaku:$SHA; then
+  echo "Image already exists for $SHA — skipping build"
+else
+  # Build for linux/amd64 (required by Nexlayer)
+  podman build --platform linux/amd64 \
+    -t gitea.elizaga.dev/directory-gu/emergency-sinlaku:$SHA \
+    -t gitea.elizaga.dev/directory-gu/emergency-sinlaku:latest \
+    -f Containerfile .
+fi
 
 # Push
+podman push gitea.elizaga.dev/directory-gu/emergency-sinlaku:$SHA
 podman push gitea.elizaga.dev/directory-gu/emergency-sinlaku:latest
 ```
 
 **Note:** Always build for `linux/amd64`. ARM builds will fail on Nexlayer.
+**Force rebuild:** To rebuild even if the image exists, run `podman rmi gitea.elizaga.dev/directory-gu/emergency-sinlaku:$SHA` first.
 
 ---
 
