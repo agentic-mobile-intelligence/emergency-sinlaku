@@ -19,6 +19,7 @@ import { supabase } from "@/lib/supabase"
 import type { Tables } from "@/lib/database.types"
 import { Constants } from "@/lib/database.types"
 import OrgBadge from "@/components/OrgBadge"
+import DisasterAssistanceDialog from "@/components/DisasterAssistanceDialog"
 
 type Offering = Tables<"offerings"> & { organizations: Pick<Tables<"organizations">, "name" | "contact_phone" | "verified" | "org_category" | "hidden_from_map"> }
 
@@ -501,10 +502,13 @@ export default function IslandPage() {
               </div>
             )}
 
-            {/* Request Aid CTA */}
-            <Button className="w-full" style={{ backgroundColor: BRAND }} onClick={() => navigate("/request-aid")}>
-              Request Aid
-            </Button>
+            {/* Request Aid + FEMA CTAs */}
+            <div className="space-y-2">
+              <Button className="w-full" style={{ backgroundColor: BRAND }} onClick={() => navigate("/request-aid")}>
+                Request Aid
+              </Button>
+              <DisasterAssistanceDialog fullWidth />
+            </div>
           </div>
         </aside>
 
