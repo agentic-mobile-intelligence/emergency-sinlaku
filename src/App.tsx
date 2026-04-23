@@ -32,6 +32,9 @@ import TransparencyPage from "@/pages/TransparencyPage"
 import InstructionsPage from "@/pages/InstructionsPage"
 import GovOfficialsPage from "@/pages/GovOfficialsPage"
 import FundLeaderApplyPage from "@/pages/FundLeaderApplyPage"
+import FeedbackSubmitPage from "@/pages/FeedbackSubmitPage"
+import FeedbackSubmittedPage from "@/pages/FeedbackSubmittedPage"
+import FeedbackViewPage from "@/pages/FeedbackViewPage"
 
 const toasterProps = {
   theme: "dark" as const,
@@ -195,6 +198,9 @@ function App() {
           <Route path="/instructions" element={<InstructionsPage />} />
           <Route path="/gov-officials" element={<GovOfficialsPage />} />
           <Route path="/fund-leader/apply" element={<FundLeaderApplyPage />} />
+          <Route path="/feedback/:orgId" element={<FeedbackSubmitPage />} />
+          <Route path="/feedback/submitted/:feedbackId" element={<FeedbackSubmittedPage />} />
+          <Route path="/feedback/view/:feedbackId" element={<FeedbackViewPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster {...toasterProps} />
