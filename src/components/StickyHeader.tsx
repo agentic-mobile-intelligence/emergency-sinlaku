@@ -41,6 +41,8 @@ export default function StickyHeader() {
             <Info className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Getting Started</span>
           </Link>
+          {/* How to Help — disabled */}
+          {/*
           <Link
             to="/how-to-help"
             className="flex items-center gap-1.5 bg-green-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-green-700 transition"
@@ -48,6 +50,7 @@ export default function StickyHeader() {
             <Heart className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">How to Help</span>
           </Link>
+          */}
         </div>
 
         {/* Right: CTAs + auth */}

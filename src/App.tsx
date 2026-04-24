@@ -60,7 +60,50 @@ function LandingPage() {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold text-[#1E3A5F] mb-2 text-center">
+      {/* Getting Started */}
+      <div className="mb-4 w-full max-w-md">
+        <Link
+          to="/instructions"
+          className="flex items-center justify-between w-full border-2 border-[#1E3A5F] text-[#1E3A5F] font-bold text-sm rounded-lg px-4 py-3 hover:bg-[#1E3A5F]/5 transition"
+        >
+          <span>Getting Started</span>
+          <span className="text-[#1E3A5F]/60">→</span>
+        </Link>
+      </div>
+
+      {/* Upcoming Events — yellow with black diagonal stripes */}
+      <div
+        className="mb-6 w-full max-w-md rounded-xl overflow-hidden"
+        style={{
+          background: `repeating-linear-gradient(
+            -45deg,
+            #FBBF24,
+            #FBBF24 10px,
+            #000000 10px,
+            #000000 20px
+          )`,
+        }}
+      >
+        <div className="m-[6px] rounded-lg bg-[#FBBF24] p-4">
+          <h2 className="text-lg font-extrabold text-black mb-3 text-center tracking-wide">
+            ⚠️ UPCOMING EVENTS
+          </h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+            <a href="/images/events/gwa-restoration-map.jpg" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 snap-center">
+              <img src="/images/events/gwa-restoration-map.jpg" alt="GWA Water Restoration Map — April 22, 2026" className="w-56 rounded-lg shadow-md border-2 border-black/20" />
+            </a>
+            <a href="/images/events/dphss-recovery-services.jpg" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 snap-center">
+              <img src="/images/events/dphss-recovery-services.jpg" alt="DPHSS Sinlaku Recovery — Immunization, Food Distribution, Medical Care" className="w-56 rounded-lg shadow-md border-2 border-black/20" />
+            </a>
+            <a href="/images/events/medication-disposal.jpg" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 snap-center">
+              <img src="/images/events/medication-disposal.jpg" alt="Medication Disposal — Saturday April 25, 2026" className="w-56 rounded-lg shadow-md border-2 border-black/20" />
+            </a>
+          </div>
+          <p className="text-xs text-black/60 mt-2 text-center">Swipe to see more → Tap to view full size</p>
+        </div>
+      </div>
+
+      <h1 className="text-3xl font-bold text-[#1E3A5F] mb-2 text-center" style={{ width: '80%' }}>
         Guam, and the Commonwealth of the Northern Mariana Islands (CNMI) Emergency Relief Directory
       </h1>
       <p className="text-gray-600 mb-8 text-center max-w-lg">
@@ -73,17 +116,6 @@ function LandingPage() {
         <Link to="/rota" className="bg-[#1E3A5F] text-white rounded-xl p-6 text-center text-lg font-bold hover:bg-[#2a4f7a] transition">Rota</Link>
       </div>
       <p className="mt-4 text-xs text-gray-400">Select an island to view emergency services on the map</p>
-
-      {/* Getting Started */}
-      <div className="mt-8 w-full max-w-md">
-        <Link
-          to="/instructions"
-          className="flex items-center justify-between w-full border-2 border-[#1E3A5F] text-[#1E3A5F] font-bold text-sm rounded-lg px-4 py-3 hover:bg-[#1E3A5F]/5 transition"
-        >
-          <span>Getting Started</span>
-          <span className="text-[#1E3A5F]/60">→</span>
-        </Link>
-      </div>
 
       {/* Volunteer CTA */}
       <div className="mt-3 w-full max-w-md rounded-xl border-2 border-[#1E3A5F] bg-[#1E3A5F]/5 p-5">
